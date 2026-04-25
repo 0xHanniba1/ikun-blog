@@ -69,7 +69,10 @@ const pubDate = dayjs(pubDatetime).tz(postTimezone || SITE.timezone);
 const isModified = modDatetime && modDatetime > pubDatetime;
 
 // File-name display: posts/YYYY-MM-DD-slug.md
-const slug = post.id;
+const rawId = post.id;
+const slug = rawId.endsWith("/index")
+  ? rawId.slice(0, -"/index".length)
+  : rawId;
 const filenameDisplay = `posts/${pubDate.format("YYYY-MM-DD")}-${slug}.md`;
 
 // Approximate reading time: ~300 cn chars/min, fallback to 4 min

@@ -2,11 +2,13 @@ import { BLOG_PATH } from "@/content.config";
 import { slugifyStr } from "./slugify";
 
 /**
- * Get full path of a blog post
- * @param id - id of the blog post (aka slug)
- * @param filePath - the blog post full file location
- * @param includeBase - whether to include `/posts` in return value
- * @returns blog post path
+ * Get full path of a blog post.
+ *
+ * Conventions supported:
+ *   src/data/blog/foo.md             → /posts/foo
+ *   src/data/blog/foo/index.md       → /posts/foo                (index drops)
+ *   src/data/blog/foo/bar.md         → /posts/foo/bar
+ *   src/data/blog/foo/bar/index.md   → /posts/foo/bar
  */
 export function getPath(
   id: string,
@@ -16,21 +18,26 @@ export function getPath(
   const pathSegments = filePath
     ?.replace(BLOG_PATH, "")
     .split("/")
-    .filter(path => path !== "") // remove empty string in the segments ["", "other-path"] <- empty string will be removed
-    .filter(path => !path.startsWith("_")) // exclude directories start with underscore "_"
-    .slice(0, -1) // remove the last segment_ file name_ since it's unnecessary
-    .map(segment => slugifyStr(segment)); // slugify each segment path
+    .filter(path => path !== "")
+    .filter(path => !path.startsWith("_"))
+    .slice(0, -1) // drop the file name itself
+    .map(segment => slugifyStr(segment));
 
   const basePath = includeBase ? "/posts" : "";
 
-  // Making sure `id` does not contain the directory
-  const blogId = id.split("/");
-  const slug = blogId.length > 0 ? blogId.slice(-1) : blogId;
+  const blogIdParts = id.split("/");
+  const lastSegment = blogIdParts.length > 0
+    ? blogIdParts[blogIdParts.length - 1]
+    : id;
 
-  // If not inside the sub-dir, simply return the file path
+  // Treat `index` as a folder marker, not a path segment.
+  const slug = lastSegment === "index" ? "" : lastSegment;
+
   if (!pathSegments || pathSegments.length < 1) {
-    return [basePath, slug].join("/");
+    return slug ? [basePath, slug].join("/") : basePath || "/";
   }
 
-  return [basePath, ...pathSegments, slug].join("/");
+  return slug
+    ? [basePath, ...pathSegments, slug].join("/")
+    : [basePath, ...pathSegments].join("/");
 }

@@ -31,4 +31,6 @@ featured: true
 
 ## 图片测试
 
-![image-20260425230034809](/Users/kerwin/ikun-blog/src/data/blog/hello-world/image-20260425230034809.png)
+![image-20260425230034809](./image-20260425230034809.png)
+
+![image-20260425231715962](./image-20260425231715962.png)
