@@ -1,0 +1,23 @@
+export const SITE = {
+  website: "https://ikun126.com/",
+  author: "韩老魔",
+  profile: "https://github.com/0xhanniba1",
+  desc: "工程实践、AI agent、踩坑笔记 与思考。",
+  title: "韩老魔的博客",
+  ogImage: "astropaper-og.jpg",
+  lightAndDarkMode: true,
+  postPerIndex: 4,
+  postPerPage: 4,
+  scheduledPostMargin: 15 * 60 * 1000,
+  showArchives: true,
+  showBackButton: true,
+  editPost: {
+    enabled: false,
+    text: "Edit page",
+    url: "https://github.com/0xhanniba1/ikun-blog/edit/main/",
+  },
+  dynamicOgImage: true,
+  dir: "ltr",
+  lang: "zh-cn",
+  timezone: "Asia/Shanghai",
+} as const;
