@@ -60,10 +60,14 @@ html[data-theme="dark"] {
     scrollbar-color: var(--color-muted) transparent;
   }
   html {
-    @apply overflow-y-scroll scroll-smooth;
+    @apply scroll-smooth;
+    height: 100svh;
+    overflow: hidden;
   }
   body {
-    @apply flex min-h-svh flex-col font-mono text-foreground selection:bg-accent selection:text-background;
+    @apply flex flex-col font-mono text-foreground selection:bg-accent selection:text-background;
+    height: 100svh;
+    overflow: hidden;
     /* Desktop wallpaper:
        1) faint dot grid (developer texture)
        2) soft warm light from top-left
@@ -110,6 +114,16 @@ html[data-theme="dark"] {
   border: 1px solid var(--border);
   border-radius: 6px;
   box-shadow: 0 12px 40px rgba(60, 50, 30, 0.18);
+  min-height: 0;
+}
+
+/* Inside the window: chrome + nav + footer are fixed bands; main scrolls.
+   This puts the scrollbar inside the window instead of on the page. */
+.app-window > main {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 html[data-theme="dark"] .app-window {

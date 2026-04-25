@@ -36,7 +36,10 @@ const {
   hideEditPost,
 } = post.data;
 
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
+
+// Sidebar TOC: only h2 + h3.
+const tocItems = headings.filter(h => h.depth === 2 || h.depth === 3);
 
 let ogImageUrl: string | undefined;
 if (typeof initOgImage === "string") {
@@ -89,148 +92,330 @@ const nextPost =
   <Header page={`${slug}.md`} />
   <main
     id="main-content"
-    class="app-layout pt-7 pb-12"
+    class="app-layout pt-7 pb-12 post-grid"
     data-pagefind-body
   >
-    <div
-      class="font-mono text-[12px] mb-1.5"
-      style="color: var(--muted);"
-    >
-      {filenameDisplay}
-    </div>
-
-    <h1
-      transition:name={slugifyStr(title.replaceAll(".", "-"))}
-      class="term-cn text-[28px] sm:text-[34px] font-extrabold leading-[1.2] tracking-tight m-0"
-    >
-      {title}
-    </h1>
-
-    <div
-      class="font-mono text-[12px] flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-4 pb-4"
-      style="color: var(--muted); border-bottom: 1px dashed var(--border);"
-    >
-      <span>{pubDate.format("YYYY-MM-DD")}</span>
-      <span aria-hidden="true">·</span>
-      <span>{readMin} min</span>
-      {
-        isModified && (
-          <>
-            <span aria-hidden="true">·</span>
-            <span>
-              updated{" "}
-              {dayjs(modDatetime)
-                .tz(postTimezone || SITE.timezone)
-                .format("YYYY-MM-DD")}
-            </span>
-          </>
-        )
-      }
-      {
-        tags && tags.length > 0 && (
-          <>
-            <span class="flex-1 hidden sm:inline-block" />
-            <span class="flex flex-wrap gap-1.5">
-              {tags.map(t => (
-                <a href={`/tags/${slugifyStr(t)}/`} class="term-tag no-underline">
-                  #{t}
-                </a>
+    {
+      tocItems.length > 0 && (
+        <aside
+          id="post-toc"
+          class="post-toc"
+          aria-label="Table of contents"
+          data-pagefind-ignore
+        >
+          <div class="post-toc-inner">
+            <div
+              class="font-mono text-[11px] mb-2.5"
+              style="color: var(--muted); letter-spacing: 0.04em;"
+            >
+              # TOC
+            </div>
+            <ul class="m-0 p-0 list-none font-mono text-[12px] leading-[2]">
+              {tocItems.map(h => (
+                <li>
+                  <a
+                    href={`#${h.slug}`}
+                    class="post-toc-link"
+                    data-toc-link={h.slug}
+                    style={`padding-left: ${(h.depth - 2) * 10}px;`}
+                  >
+                    <span class="post-toc-arrow" aria-hidden="true">
+                      {"  "}
+                    </span>
+                    <span class="post-toc-text">{h.text}</span>
+                  </a>
+                </li>
               ))}
-            </span>
-          </>
-        )
-      }
-    </div>
-
-    <article
-      id="article"
-      class="app-prose mt-7 w-full max-w-app"
-    >
-      <Content />
-    </article>
-
-    <hr class="my-8" style="border-top: 1px dashed var(--border);" />
-
-    <EditPost {hideEditPost} {post} />
-
-    <BackToTopButton />
-
-    <ShareLinks />
-
-    <hr class="my-6" style="border-top: 1px dashed var(--border);" />
-
-    <!-- Prev/Next -->
-    <div
-      data-pagefind-ignore
-      class="font-mono text-[12px] grid grid-cols-1 sm:grid-cols-2 gap-4"
-      style="color: var(--muted);"
-    >
-      {
-        prevPost && (
-          <a
-            href={getPath(prevPost.id, prevPost.filePath)}
-            class="term-card block px-2 py-2 no-underline"
-          >
-            <span style="color: var(--muted);">← prev</span>
+            </ul>
             <div
-              class="term-cn text-[14px] mt-0.5"
-              style="color: var(--accent);"
+              class="font-mono mt-5 text-[10.5px]"
+              style="color: var(--muted);"
             >
-              {prevPost.title}
+              read · <span id="post-read-pct">0%</span>
             </div>
-          </a>
-        )
-      }
-      {
-        nextPost && (
-          <a
-            href={getPath(nextPost.id, nextPost.filePath)}
-            class="term-card block px-2 py-2 no-underline text-right sm:col-start-2"
-          >
-            <span style="color: var(--muted);">next →</span>
-            <div
-              class="term-cn text-[14px] mt-0.5"
-              style="color: var(--accent);"
+          </div>
+        </aside>
+      )
+    }
+
+    <div class="post-content min-w-0">
+      <div
+        class="font-mono text-[12px] mb-1.5"
+        style="color: var(--muted);"
+      >
+        {filenameDisplay}
+      </div>
+
+      <h1
+        transition:name={slugifyStr(title.replaceAll(".", "-"))}
+        class="term-cn text-[28px] sm:text-[34px] font-extrabold leading-[1.2] tracking-tight m-0"
+      >
+        {title}
+      </h1>
+
+      <div
+        class="font-mono text-[12px] flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-4 pb-4"
+        style="color: var(--muted); border-bottom: 1px dashed var(--border);"
+      >
+        <span>{pubDate.format("YYYY-MM-DD")}</span>
+        <span aria-hidden="true">·</span>
+        <span>{readMin} min</span>
+        {
+          isModified && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>
+                updated{" "}
+                {dayjs(modDatetime)
+                  .tz(postTimezone || SITE.timezone)
+                  .format("YYYY-MM-DD")}
+              </span>
+            </>
+          )
+        }
+        {
+          tags && tags.length > 0 && (
+            <>
+              <span class="flex-1 hidden sm:inline-block" />
+              <span class="flex flex-wrap gap-1.5">
+                {tags.map(t => (
+                  <a href={`/tags/${slugifyStr(t)}/`} class="term-tag no-underline">
+                    #{t}
+                  </a>
+                ))}
+              </span>
+            </>
+          )
+        }
+      </div>
+
+      <article
+        id="article"
+        class="app-prose mt-7 w-full"
+      >
+        <Content />
+      </article>
+
+      <hr class="my-8" style="border-top: 1px dashed var(--border);" />
+
+      <EditPost {hideEditPost} {post} />
+
+      <BackToTopButton />
+
+      <ShareLinks />
+
+      <hr class="my-6" style="border-top: 1px dashed var(--border);" />
+
+      <!-- Prev/Next -->
+      <div
+        data-pagefind-ignore
+        class="font-mono text-[12px] grid grid-cols-1 sm:grid-cols-2 gap-4"
+        style="color: var(--muted);"
+      >
+        {
+          prevPost && (
+            <a
+              href={getPath(prevPost.id, prevPost.filePath)}
+              class="term-card block px-2 py-2 no-underline"
             >
-              {nextPost.title}
-            </div>
-          </a>
-        )
-      }
+              <span style="color: var(--muted);">← prev</span>
+              <div
+                class="term-cn text-[14px] mt-0.5"
+                style="color: var(--accent);"
+              >
+                {prevPost.title}
+              </div>
+            </a>
+          )
+        }
+        {
+          nextPost && (
+            <a
+              href={getPath(nextPost.id, nextPost.filePath)}
+              class="term-card block px-2 py-2 no-underline text-right sm:col-start-2"
+            >
+              <span style="color: var(--muted);">next →</span>
+              <div
+                class="term-cn text-[14px] mt-0.5"
+                style="color: var(--accent);"
+              >
+                {nextPost.title}
+              </div>
+            </a>
+          )
+        }
+      </div>
     </div>
   </main>
   <Footer />
 </Layout>
 
+<style>
+  /* Post grid: sidebar TOC + content, side-by-side on lg+ */
+  .post-grid {
+    display: block;
+  }
+  @media (min-width: 1024px) {
+    .post-grid {
+      display: grid;
+      grid-template-columns: 180px minmax(0, 1fr);
+      gap: 40px;
+      align-items: start;
+    }
+  }
+
+  .post-toc {
+    display: none;
+  }
+  .post-content {
+    min-width: 0;
+  }
+  @media (min-width: 1024px) {
+    .post-toc {
+      display: block;
+      grid-column: 1 / 2;
+      grid-row: 1;
+      position: sticky;
+      top: 24px;
+      align-self: flex-start;
+      max-height: calc(100svh - 120px);
+      overflow-y: auto;
+      padding-top: 80px; /* align with article body, below the H1 */
+    }
+    .post-content {
+      grid-column: 2 / 3;
+      grid-row: 1;
+    }
+  }
+
+  .post-toc-link {
+    display: flex;
+    align-items: baseline;
+    gap: 0;
+    color: color-mix(in srgb, var(--foreground) 60%, transparent);
+    text-decoration: none;
+    transition: color 0.12s;
+    font-family: var(--font-mono);
+  }
+  .post-toc-link .post-toc-arrow {
+    width: 1em;
+    flex-shrink: 0;
+    color: var(--accent);
+    opacity: 0;
+    transition: opacity 0.12s;
+  }
+  .post-toc-link:hover {
+    color: var(--foreground);
+  }
+  .post-toc-link.is-active {
+    color: var(--accent);
+  }
+  .post-toc-link.is-active .post-toc-arrow {
+    opacity: 1;
+  }
+  .post-toc-link.is-active .post-toc-arrow::before {
+    content: "▸";
+  }
+</style>
+
 <script is:inline data-astro-rerun>
-  /* Top progress bar */
+  function getMain() {
+    return document.getElementById("main-content");
+  }
+
+  /* Sticky progress bar inside the window (top of main). */
   function createProgressBar() {
-    if (document.querySelector(".progress-container")) return;
+    const main = getMain();
+    if (!main || main.querySelector(".progress-container")) return;
     const c = document.createElement("div");
-    c.className = "progress-container fixed top-0 z-30 h-[2px] w-full";
-    c.style.background = "var(--border)";
+    c.className = "progress-container";
+    c.style.cssText =
+      "position: sticky; top: 0; left: 0; right: 0; z-index: 5; height: 2px; background: var(--border); margin: 0 0 0; pointer-events: none;";
     const b = document.createElement("div");
-    b.className = "progress-bar h-full w-0";
-    b.style.background = "var(--accent)";
+    b.className = "progress-bar";
+    b.style.cssText = "height: 100%; width: 0; background: var(--accent);";
     b.id = "myBar";
     c.appendChild(b);
-    document.body.appendChild(c);
+    main.insertBefore(c, main.firstChild);
   }
   createProgressBar();
 
+  function readPct() {
+    const main = getMain();
+    if (!main) return 0;
+    const top = main.scrollTop;
+    const max = main.scrollHeight - main.clientHeight;
+    return max > 0 ? (top / max) * 100 : 0;
+  }
+
   function updateScrollProgress() {
-    document.addEventListener("scroll", () => {
-      const winScroll =
-        document.body.scrollTop || document.documentElement.scrollTop;
-      const height =
-        document.documentElement.scrollHeight -
-        document.documentElement.clientHeight;
-      const scrolled = (winScroll / height) * 100;
-      const myBar = document.getElementById("myBar");
-      if (myBar) myBar.style.width = scrolled + "%";
-    });
+    const main = getMain();
+    if (!main) return;
+    main.addEventListener(
+      "scroll",
+      () => {
+        const scrolled = readPct();
+        const bar = document.getElementById("myBar");
+        if (bar) bar.style.width = scrolled + "%";
+        const pct = document.getElementById("post-read-pct");
+        if (pct) pct.textContent = Math.round(scrolled) + "%";
+      },
+      { passive: true }
+    );
   }
   updateScrollProgress();
+
+  /* Highlight active TOC entry based on heading currently in view (inside main) */
+  function trackTocActive() {
+    const main = getMain();
+    if (!main) return;
+    const links = Array.from(document.querySelectorAll("[data-toc-link]"));
+    if (links.length === 0) return;
+    const targets = links
+      .map(a => document.getElementById(a.getAttribute("data-toc-link")))
+      .filter(Boolean);
+    if (targets.length === 0) return;
+
+    function setActive(slug) {
+      links.forEach(a => {
+        a.classList.toggle(
+          "is-active",
+          a.getAttribute("data-toc-link") === slug
+        );
+      });
+    }
+
+    function onScroll() {
+      const mainTop = main.getBoundingClientRect().top;
+      const threshold = mainTop + 120;
+      let current = targets[0].id;
+      for (const t of targets) {
+        if (t.getBoundingClientRect().top <= threshold) current = t.id;
+        else break;
+      }
+      setActive(current);
+    }
+    onScroll();
+    main.addEventListener("scroll", onScroll, { passive: true });
+  }
+  trackTocActive();
+
+  /* TOC anchor clicks: scroll target into view inside main. */
+  function bindTocAnchors() {
+    const main = getMain();
+    if (!main) return;
+    document.querySelectorAll("[data-toc-link]").forEach(a => {
+      a.addEventListener("click", e => {
+        const slug = a.getAttribute("data-toc-link");
+        const t = document.getElementById(slug);
+        if (!t) return;
+        e.preventDefault();
+        history.replaceState(null, "", "#" + slug);
+        t.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+  }
+  bindTocAnchors();
 
   /* Anchor links on headings */
   function addHeadingLinks() {
@@ -295,7 +480,9 @@ const nextPost =
   }
   attachCopyButtons();
 
-  document.addEventListener("astro:after-swap", () =>
-    window.scrollTo({ left: 0, top: 0, behavior: "instant" })
-  );
+  document.addEventListener("astro:after-swap", () => {
+    const main = getMain();
+    if (main) main.scrollTop = 0;
+    else window.scrollTo({ left: 0, top: 0, behavior: "instant" });
+  });
 </script>
