@@ -2,7 +2,7 @@ export const SITE = {
   website: "https://ikun126.com/",
   author: "韩老魔",
   profile: "https://github.com/0xhanniba1",
-  desc: "工程实践、AI agent、踩坑笔记 与思考。",
+  desc: "工程实践、AI agent、踩坑笔记与思考。",
   title: "韩老魔的博客",
   ogImage: "astropaper-og.jpg",
   lightAndDarkMode: true,
