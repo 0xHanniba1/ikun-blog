@@ -1,22 +1,13 @@
 ---
 title: "Hello, World"
 pubDatetime: 2026-04-25T16:50:00+08:00
-description: "新博客的第一篇 —— 关于为什么换站、用什么搭、接下来要写什么。"
+description: "新博客的第一篇(用于测试) —— 关于用什么搭、接下来要写什么。"
 tags:
   - 站务
 featured: true
 ---
 
 这是新博客的第一篇文章。
-
-## 为什么开新站
-
-之前的博客 [0xhanniba1.github.io](https://0xhanniba1.github.io/) 越来越像生活碎碎念 —— 周记、年度记录、随手的想法。
-
-我想把**技术内容单独拎出来**，让两边都更纯粹：
-
-- **碎碎念站**：周记、年度记录、生活想法
-- **技术站**（也就是这里）：工程实践、AI agent、踩坑笔记与思考
 
 ## 这个站怎么搭的
 
@@ -38,8 +29,6 @@ featured: true
 - 零散的工具链笔记（Git、shell、效率工具）
 - 可能会有一些读源码的笔记
 
-## 一句话
+## 图片测试
 
-慢就是快 / 自律 / 坚持。
-
-下篇见。
+![image-20260425230034809](/Users/kerwin/ikun-blog/src/data/blog/hello-world/image-20260425230034809.png)
