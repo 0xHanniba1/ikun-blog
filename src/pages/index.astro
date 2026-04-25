@@ -11,6 +11,9 @@ import getSortedPosts from "@/utils/getSortedPosts";
 import getUniqueTags from "@/utils/getUniqueTags";
 import { getPath } from "@/utils/getPath";
 import { SITE } from "@/config";
+import IconGitHub from "@/assets/icons/IconGitHub.svg";
+import IconBrandX from "@/assets/icons/IconBrandX.svg";
+import IconRss from "@/assets/icons/IconRss.svg";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -127,35 +130,62 @@ const updatedToday = today.format("YYYY-MM-DD HH:mm");
         > whoami
       </div>
       <h1
-        class="term-cn font-extrabold mt-3 mb-1.5 text-[34px] sm:text-[42px] leading-[1.15] tracking-tight"
+        class="term-cn font-extrabold mt-3 mb-5 text-[34px] sm:text-[42px] leading-[1.15] tracking-tight"
       >
         {SITE.title}<span class="term-cursor"></span>
       </h1>
-      <div
-        class="font-mono text-[13px] mb-4"
-        style="color: var(--muted);"
-      >
-        // han@ikun126:~$ cat about.md
-      </div>
-      <p
-        class="term-cn text-[15px] leading-[1.85] max-w-[600px] m-0"
-      >
-        {SITE.desc}
-      </p>
-      <p
-        class="font-mono text-[13px] mt-1.5"
-        style="color: color-mix(in srgb, var(--foreground) 65%, transparent);"
-      >
-        # 慢就是快 / 自律 / 坚持。
-      </p>
 
-      <div class="font-mono text-[12.5px] flex flex-wrap gap-x-3 gap-y-1 mt-5">
-        <span style="color: var(--muted);">links:</span>
-        <a class="term-link" href="https://github.com/0xhanniba1" target="_blank"
-          rel="noopener">github</a>
-        <a class="term-link" href="https://x.com/0xHanniba1" target="_blank"
-          rel="noopener">x.com</a>
-        <a class="term-link" href="/rss.xml">rss.xml</a>
+      <div
+        class="font-mono text-[12.5px] mb-3"
+        style="color: color-mix(in srgb, var(--foreground) 70%, transparent);"
+      >
+        <span class="term-prompt">han@ikun126</span><span style="color: var(--muted);"
+          >:~$</span
+        > cat about.md
+      </div>
+
+      <div class="home-about" aria-label="profile">
+        <div class="home-about-avatar" aria-hidden="true">
+          <span>韩</span>
+        </div>
+        <div class="home-about-meta">
+          <div class="home-about-handle">@0XHANNIBA1</div>
+          <div class="home-about-motto term-cn">
+            慢就是快<span class="home-about-dot">·</span>自律<span
+              class="home-about-dot">·</span
+            >坚持
+          </div>
+          <div class="home-about-socials">
+            <a
+              href="https://github.com/0xhanniba1"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="home-about-pill"
+            >
+              <IconGitHub
+                class="size-3.5 fill-transparent stroke-current stroke-2"
+              />
+              <span>0xHanniba1</span>
+            </a>
+            <a
+              href="https://x.com/0xHanniba1"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="home-about-pill"
+            >
+              <IconBrandX
+                class="size-3.5 fill-transparent stroke-current stroke-2"
+              />
+              <span>@0xHanniba1</span>
+            </a>
+            <a href="/rss.xml" class="home-about-pill">
+              <IconRss
+                class="size-3.5 fill-transparent stroke-current stroke-2"
+              />
+              <span>RSS</span>
+            </a>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -279,6 +309,119 @@ const updatedToday = today.format("YYYY-MM-DD HH:mm");
   </main>
   <Footer />
 </Layout>
+
+<style>
+  .home-about {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    padding: 20px 22px;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    background: var(--background);
+  }
+  @media (max-width: 640px) {
+    .home-about {
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 16px;
+      text-align: center;
+    }
+  }
+
+  .home-about-avatar {
+    flex-shrink: 0;
+    width: 96px;
+    height: 96px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent) 92%, white 8%) 0%,
+      color-mix(in srgb, var(--accent) 78%, black 22%) 100%
+    );
+    color: #0c1a12;
+    box-shadow:
+      0 0 0 3px var(--background),
+      0 0 0 4px color-mix(in srgb, var(--accent) 45%, transparent),
+      0 12px 32px color-mix(in srgb, var(--accent) 28%, transparent);
+    font-family: var(--font-cn);
+    font-size: 56px;
+    font-weight: 700;
+    line-height: 1;
+    user-select: none;
+  }
+  :global(html[data-theme="dark"]) .home-about-avatar {
+    color: #051409;
+    box-shadow:
+      0 0 0 3px var(--background),
+      0 0 0 4px color-mix(in srgb, var(--accent) 55%, transparent),
+      0 12px 36px color-mix(in srgb, var(--accent) 24%, transparent);
+  }
+  .home-about-avatar span {
+    transform: translateY(-3px);
+  }
+
+  .home-about-meta {
+    flex: 1;
+    min-width: 0;
+  }
+  .home-about-handle {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.16em;
+    margin-bottom: 8px;
+  }
+  .home-about-motto {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.005em;
+    margin: 0 0 14px;
+    color: var(--foreground);
+  }
+  @media (min-width: 640px) {
+    .home-about-motto {
+      font-size: 26px;
+    }
+  }
+  .home-about-dot {
+    color: var(--accent);
+    margin: 0 0.4em;
+    font-weight: 400;
+  }
+
+  .home-about-socials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .home-about-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 11px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--foreground);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    transition:
+      border-color 0.12s,
+      color 0.12s,
+      background 0.12s;
+  }
+  .home-about-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+</style>
 
 <script>
   document.addEventListener("astro:page-load", () => {
