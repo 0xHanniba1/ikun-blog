@@ -1,7 +1,6 @@
 ---
 import { getCollection } from "astro:content";
 import type { GetStaticPathsOptions } from "astro";
-import Main from "@/layouts/Main.astro";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
@@ -33,16 +32,32 @@ const { page, tagName } = Astro.props;
 
 <Layout title={`Tag: ${tagName} | ${SITE.title}`}>
   <Header />
-  <Main
-    pageTitle={[`Tag:`, `${tagName}`]}
-    titleTransition={tag}
-    pageDesc={`All the articles with the tag "${tagName}".`}
-  >
-    <h1 slot="title" transition:name={tag}>{`Tag:${tag}`}</h1>
-    <ul>
+  <main id="main-content" class="app-layout pt-7 pb-4">
+    <div
+      class="font-mono text-[12.5px]"
+      style="color: color-mix(in srgb, var(--foreground) 70%, transparent);"
+    >
+      <span class="term-prompt">han@ikun126</span><span style="color: var(--muted);"
+        >:~$</span
+      > grep -l '#{tag}' ./posts/*.md
+    </div>
+    <h2 class="term-cn text-[28px] font-bold mt-3 mb-1">
+      <span style="color: var(--muted);" class="font-mono text-[18px] mr-2"
+        >tag:</span
+      >
+      <span transition:name={tag} style="color: var(--accent);">#{tagName}</span>
+    </h2>
+    <p
+      class="font-mono text-[12px] mt-1 mb-4"
+      style="color: var(--muted);"
+    >
+      {page.total} 篇 · page {page.currentPage} / {page.lastPage}
+    </p>
+
+    <ul class="m-0 p-0 list-none">
       {page.data.map(data => <Card {...data} />)}
     </ul>
-  </Main>
+  </main>
 
   <Pagination {page} />
 

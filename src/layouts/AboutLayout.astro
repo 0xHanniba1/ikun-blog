@@ -2,8 +2,10 @@
 import type { MarkdownLayoutProps } from "astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
-import Breadcrumb from "@/components/Breadcrumb.astro";
 import Layout from "./Layout.astro";
+import IconGitHub from "@/assets/icons/IconGitHub.svg";
+import IconBrandX from "@/assets/icons/IconBrandX.svg";
+import IconRss from "@/assets/icons/IconRss.svg";
 import { SITE } from "@/config";
 
 type Props = MarkdownLayoutProps<{ title: string }>;
@@ -12,13 +14,175 @@ const { frontmatter } = Astro.props;
 ---
 
 <Layout title={`${frontmatter.title} | ${SITE.title}`}>
-  <Header />
-  <Breadcrumb />
-  <main id="main-content" class="app-layout">
-    <section id="about" class="app-prose mb-28 max-w-app prose-img:border-0">
-      <h1 class="text-2xl tracking-wider sm:text-3xl">{frontmatter.title}</h1>
-      <slot />
+  <Header page="about.md" />
+  <main id="main-content" class="app-layout pt-7 pb-10">
+    <div
+      class="font-mono text-[12.5px] mb-3"
+      style="color: color-mix(in srgb, var(--foreground) 70%, transparent);"
+    >
+      <span class="term-prompt">han@ikun126</span><span style="color: var(--muted);"
+        >:~$</span
+      > cat ~/about.md
+    </div>
+
+    <!-- Hero card: avatar + handle + motto + socials -->
+    <section
+      class="about-hero"
+      aria-label="profile"
+    >
+      <div class="about-avatar" aria-hidden="true">
+        <span>韩</span>
+      </div>
+      <div class="about-meta">
+        <div class="about-handle">@0XHANNIBA1</div>
+        <h1 class="about-motto term-cn">
+          慢就是快<span class="about-dot">·</span>自律<span class="about-dot"
+            >·</span
+          >坚持
+        </h1>
+        <div class="about-socials">
+          <a
+            href="https://github.com/0xhanniba1"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="about-pill"
+          >
+            <IconGitHub class="size-4 fill-transparent stroke-current stroke-2" />
+            <span>0xHanniba1</span>
+          </a>
+          <a
+            href="https://x.com/0xHanniba1"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="about-pill"
+          >
+            <IconBrandX class="size-4 fill-transparent stroke-current stroke-2" />
+            <span>@0xHanniba1</span>
+          </a>
+          <a href="/rss.xml" class="about-pill">
+            <IconRss class="size-4 fill-transparent stroke-current stroke-2" />
+            <span>RSS</span>
+          </a>
+        </div>
+      </div>
     </section>
+
+    <div hidden>
+      <slot />
+    </div>
   </main>
   <Footer />
 </Layout>
+
+<style>
+  .about-hero {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    padding: 28px 28px;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    background: var(--background);
+  }
+  @media (max-width: 640px) {
+    .about-hero {
+      flex-direction: column;
+      align-items: center;
+      gap: 22px;
+      padding: 24px 18px;
+      text-align: center;
+    }
+  }
+
+  .about-avatar {
+    flex-shrink: 0;
+    width: 168px;
+    height: 168px;
+    display: grid;
+    place-items: center;
+    border-radius: 16px;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent) 92%, white 8%) 0%,
+      color-mix(in srgb, var(--accent) 78%, black 22%) 100%
+    );
+    color: #0c1a12;
+    box-shadow:
+      0 0 0 4px var(--background),
+      0 0 0 5px color-mix(in srgb, var(--accent) 45%, transparent),
+      0 18px 50px color-mix(in srgb, var(--accent) 35%, transparent);
+    font-family: var(--font-cn);
+    font-size: 96px;
+    font-weight: 700;
+    line-height: 1;
+    user-select: none;
+  }
+  html[data-theme="dark"] .about-avatar {
+    color: #051409;
+    box-shadow:
+      0 0 0 4px var(--background),
+      0 0 0 5px color-mix(in srgb, var(--accent) 55%, transparent),
+      0 18px 60px color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+  .about-avatar span {
+    transform: translateY(-4px);
+  }
+
+  .about-meta {
+    flex: 1;
+    min-width: 0;
+  }
+  .about-handle {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 0.16em;
+    margin-bottom: 14px;
+  }
+  .about-motto {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.005em;
+    margin: 0 0 22px;
+    color: var(--foreground);
+  }
+  @media (min-width: 640px) {
+    .about-motto {
+      font-size: 38px;
+    }
+  }
+  .about-dot {
+    color: var(--accent);
+    margin: 0 0.4em;
+    font-weight: 400;
+  }
+
+  .about-socials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .about-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--foreground);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    transition:
+      border-color 0.12s,
+      color 0.12s,
+      background 0.12s;
+  }
+  .about-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+</style>

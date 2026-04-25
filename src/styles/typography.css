@@ -1,38 +1,87 @@
 @plugin "@tailwindcss/typography";
 
 @layer base {
-  /* ===== Override default Tailwind Typography styles ===== */
+  /* ── 终端 / 代码风正文样式 ─────────────────────────────────── */
   .app-prose {
     @apply prose;
+
+    font-family: var(--font-cn);
+    color: var(--foreground);
+    max-width: none;
 
     h1,
     h2,
     h3,
     h4,
-    th {
-      @apply mb-3 text-foreground;
+    h5,
+    h6 {
+      font-family: var(--font-cn);
+      color: var(--foreground);
+      letter-spacing: -0.005em;
+    }
+
+    h2 {
+      @apply mt-12 mb-4 text-2xl font-bold;
+    }
+    h2::before {
+      content: "## ";
+      font-family: var(--font-mono);
+      color: var(--accent);
+      font-weight: 600;
     }
 
     h3 {
-      @apply italic;
+      @apply mt-8 mb-3 text-xl font-semibold;
+    }
+    h3::before {
+      content: "### ";
+      font-family: var(--font-mono);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    h4 {
+      @apply mt-6 mb-2 text-lg font-semibold;
+    }
+    h4::before {
+      content: "#### ";
+      font-family: var(--font-mono);
+      color: var(--accent);
+      font-weight: 600;
     }
 
     p,
+    li,
+    td,
+    th,
     strong,
-    ol,
-    ul,
-    figcaption,
-    table,
-    code {
-      @apply text-foreground;
+    figcaption {
+      color: var(--foreground);
+    }
+
+    p {
+      @apply leading-[1.95];
     }
 
     a {
-      @apply wrap-break-word text-foreground decoration-dashed underline-offset-4 hover:text-accent focus-visible:no-underline;
+      color: inherit;
+      text-decoration: underline;
+      text-decoration-color: color-mix(
+        in srgb,
+        var(--accent) 55%,
+        transparent
+      );
+      text-decoration-style: solid;
+      text-underline-offset: 3px;
+      transition: color 0.12s;
+    }
+    a:hover {
+      color: var(--accent);
     }
 
-    ul {
-      @apply overflow-x-clip;
+    ul,
+    ol {
+      padding-left: 1.4rem;
     }
 
     li {
@@ -40,80 +89,139 @@
     }
 
     hr {
-      @apply border-border;
+      border-color: var(--border);
+      border-style: dashed;
     }
 
     img {
-      @apply mx-auto border border-border;
+      @apply mx-auto;
+      border: 1px solid var(--border);
+      border-radius: 2px;
     }
 
     figcaption {
-      @apply opacity-75;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 0.5rem;
+    }
+
+    /* inline code */
+    code {
+      font-family: var(--font-mono);
+      background: var(--surface-2);
+      padding: 1px 6px;
+      border-radius: 2px;
+      font-size: 0.9em;
+      color: var(--foreground);
+    }
+    code::before,
+    code::after {
+      content: none;
+    }
+
+    /* code block */
+    pre {
+      font-family: var(--font-mono);
+      background: var(--surface-2);
+      padding: 14px 18px;
+      border-radius: 2px;
+      font-size: 12.5px;
+      line-height: 1.7;
+      overflow: auto;
+      border-left: 2px solid var(--accent);
+      margin: 0 0 1.25rem;
+    }
+    pre code {
+      background: transparent;
+      padding: 0;
+      font-size: inherit;
+    }
+
+    blockquote {
+      font-family: var(--font-cn);
+      font-size: 1.05rem;
+      font-weight: 500;
+      margin: 1.5rem 0;
+      padding: 0.6rem 0 0.6rem 1.1rem;
+      border-left: 3px solid var(--accent);
+      opacity: 0.9;
+      font-style: normal;
+      quotes: none;
+    }
+    blockquote p::before,
+    blockquote p::after {
+      content: none;
     }
 
     table {
       th,
       td {
-        @apply border border-border p-2;
+        border: 1px solid var(--border);
+        padding: 0.5rem 0.7rem;
+        font-family: var(--font-cn);
       }
-
       th {
-        @apply py-1.5;
+        background: var(--surface-2);
+        font-weight: 600;
       }
-
       code {
         @apply break-all sm:break-normal;
       }
     }
 
-    code {
-      @apply rounded bg-muted/75 p-1 wrap-break-word text-foreground before:content-none after:content-none;
-    }
-
-    .astro-code code {
-      @apply flex-[1_0_100%] bg-inherit p-0;
-    }
-
-    blockquote {
-      @apply border-s-accent/80 wrap-break-word opacity-80;
-    }
-
     details {
-      @apply inline-block cursor-pointer text-foreground select-none [&_p]:hidden [&_ul]:my-0!;
+      cursor: pointer;
+      color: var(--foreground);
+      user-select: none;
     }
-
     summary {
       @apply focus-visible:no-underline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent focus-visible:outline-dashed;
     }
-
-    pre {
-      @apply focus-visible:border-transparent focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-dashed;
-    }
   }
 
-  /* ===== Code Blocks & Syntax Highlighting ===== */
+  /* ── Shiki code blocks ─────────────────────────────────────── */
   .astro-code {
-    @apply flex border bg-(--shiki-light-bg) text-(--shiki-light) outline-border [&_span]:text-(--shiki-light);
+    @apply flex;
+    background: var(--surface-2) !important;
+    color: var(--foreground);
+    border: none;
+    border-left: 2px solid var(--accent);
+    outline: none;
   }
 
   html[data-theme="dark"] .astro-code {
-    @apply bg-(--shiki-dark-bg) text-(--shiki-dark) [&_span]:text-(--shiki-dark);
+    background: var(--surface-2) !important;
   }
 
-  /* Styles for Shiki transformers */
-  /* https://shiki.style/packages/transformers */
+  .astro-code code {
+    @apply flex-[1_0_100%] bg-inherit p-0;
+  }
+
+  /* Shiki transformer styles */
   .astro-code {
     .line.diff.add {
-      @apply relative inline-block w-full bg-green-400/20 before:absolute before:-left-3 before:text-green-500 before:content-['+'];
+      @apply relative inline-block w-full;
+      background: color-mix(in srgb, var(--accent) 18%, transparent);
+    }
+    .line.diff.add::before {
+      content: "+";
+      position: absolute;
+      left: -0.75rem;
+      color: var(--accent);
     }
     .line.diff.remove {
       @apply relative inline-block w-full bg-red-500/20 before:absolute before:-left-3 before:text-red-500 before:content-['-'];
     }
     .line.highlighted {
-      @apply inline-block w-full bg-slate-400/20;
+      background: color-mix(in srgb, var(--muted) 25%, transparent);
+      @apply inline-block w-full;
     }
     .highlighted-word {
-      @apply rounded-sm border border-border px-0.5 py-px;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 0 2px;
     }
   }
 }

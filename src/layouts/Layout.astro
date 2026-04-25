@@ -3,6 +3,8 @@ import { Font } from "astro:assets";
 import { ClientRouter } from "astro:transitions";
 import { PUBLIC_GOOGLE_SITE_VERIFICATION } from "astro:env/client";
 import { SITE } from "@/config";
+import SearchModal from "@/components/SearchModal.astro";
+import TweaksPanel from "@/components/TweaksPanel.astro";
 import "@/styles/global.css";
 
 type Props = {
@@ -61,9 +63,13 @@ const structuredData = {
     <link rel="canonical" href={canonicalURL} />
     <meta name="generator" content={Astro.generator} />
 
-    <!-- Load Font -->
+    <!-- Load Fonts -->
     <Font
-      cssVariable="--font-google-sans-code"
+      cssVariable="--font-mono"
+      preload={[{ subset: "latin", weight: 400, style: "normal" }]}
+    />
+    <Font
+      cssVariable="--font-cn"
       preload={[{ subset: "latin", weight: 400, style: "normal" }]}
     />
 
@@ -140,7 +146,7 @@ const structuredData = {
     <!-- Minimal inline script to prevent FOUC - sets theme immediately -->
     <script is:inline>
       (function () {
-        const initialColorScheme = ""; // "light" | "dark"
+        const initialColorScheme = "dark"; // "light" | "dark" | ""
         const currentTheme = localStorage.getItem("theme");
 
         function getPreferTheme() {
@@ -168,7 +174,13 @@ const structuredData = {
     </script>
   </head>
   <body>
-    <slot />
+    <div class="app-window">
+      <slot />
+    </div>
+
+    <SearchModal />
+
+    <TweaksPanel />
 
     <!-- Load full theme logic -->
     <script src="../scripts/theme.ts"></script>

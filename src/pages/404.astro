@@ -2,29 +2,40 @@
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
-import LinkButton from "@/components/LinkButton.astro";
 import { SITE } from "@/config";
 ---
 
 <Layout title={`404 Not Found | ${SITE.title}`}>
-  <Header />
-
+  <Header page="error.log" />
   <main
     id="main-content"
-    class="app-layout flex flex-1 items-center justify-center"
+    class="app-layout flex flex-1 items-center justify-center pt-7 pb-10"
   >
-    <div class="mb-14 flex flex-col items-center justify-center">
-      <h1 class="text-9xl font-bold text-accent">404</h1>
-      <span aria-hidden="true">¯\_(ツ)_/¯</span>
-      <p class="mt-4 text-2xl sm:text-3xl">Page Not Found</p>
-      <LinkButton
-        href="/"
-        class="my-6 text-lg underline decoration-dashed underline-offset-8"
+    <div class="flex flex-col items-start gap-3 max-w-[480px] w-full">
+      <div
+        class="font-mono text-[12.5px]"
+        style="color: var(--muted);"
       >
-        Go back home
-      </LinkButton>
+        <span class="term-prompt">han@ikun126</span>:~$ cat {Astro.url.pathname}
+      </div>
+      <div
+        class="font-mono text-[13px] px-4 py-3 w-full rounded-sm"
+        style="background: var(--surface-2); border-left: 2px solid var(--accent); color: #ff8a80;"
+      >
+        cat: {Astro.url.pathname}: No such file or directory
+      </div>
+      <div class="font-mono text-[120px] font-bold leading-none mt-3"
+        style="color: var(--accent);">
+        404
+      </div>
+      <p class="term-cn text-[18px] m-0">页面不存在</p>
+      <a
+        href="/"
+        class="term-btn no-underline mt-2"
+      >
+        ~$ cd /
+      </a>
     </div>
   </main>
-
   <Footer />
 </Layout>

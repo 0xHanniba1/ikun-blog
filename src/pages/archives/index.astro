@@ -1,83 +1,144 @@
 ---
 import { getCollection } from "astro:content";
-import Main from "@/layouts/Main.astro";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
-import Card from "@/components/Card.astro";
-import getPostsByGroupCondition from "@/utils/getPostsByGroupCondition";
+import { getPath } from "@/utils/getPath";
 import { SITE } from "@/config";
 
-// Redirect to 404 page if `showArchives` config is false
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 if (!SITE.showArchives) {
   return Astro.redirect("/404");
 }
 
 const posts = await getCollection("blog", ({ data }) => !data.draft);
 
-const months = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
+type MonthCell = { count: number; posts: typeof posts };
+type YearGroup = { year: number; months: Record<string, MonthCell>; total: number };
+
+const grouped: Record<number, YearGroup> = {};
+for (const p of posts) {
+  const d = dayjs(p.data.pubDatetime).tz(SITE.timezone);
+  const y = d.year();
+  const m = String(d.month() + 1).padStart(2, "0");
+  if (!grouped[y]) grouped[y] = { year: y, months: {}, total: 0 };
+  if (!grouped[y].months[m]) grouped[y].months[m] = { count: 0, posts: [] };
+  grouped[y].months[m].count += 1;
+  grouped[y].months[m].posts.push(p);
+  grouped[y].total += 1;
+}
+
+const years = Object.values(grouped).sort((a, b) => b.year - a.year);
 ---
 
 <Layout title={`Archives | ${SITE.title}`}>
   <Header />
-  <Main pageTitle="Archives" pageDesc="All the articles I've archived.">
+  <main id="main-content" class="app-layout pt-7 pb-10">
+    <div
+      class="font-mono text-[12.5px]"
+      style="color: color-mix(in srgb, var(--foreground) 70%, transparent);"
+    >
+      <span class="term-prompt">han@ikun126</span><span style="color: var(--muted);"
+        >:~$</span
+      > find ./posts -name "*.md" | sort -r
+    </div>
+    <h2 class="term-cn text-[28px] font-bold mt-3 mb-6">归档</h2>
+
     {
-      Object.entries(
-        getPostsByGroupCondition(posts, post =>
-          post.data.pubDatetime.getFullYear()
-        )
-      )
-        .sort(([yearA], [yearB]) => Number(yearB) - Number(yearA))
-        .map(([year, yearGroup]) => (
-          <div>
-            <span class="text-2xl font-bold">{year}</span>
-            <sup class="text-sm">{yearGroup.length}</sup>
-            {Object.entries(
-              getPostsByGroupCondition(
-                yearGroup,
-                post => post.data.pubDatetime.getMonth() + 1
-              )
-            )
-              .sort(([monthA], [monthB]) => Number(monthB) - Number(monthA))
-              .map(([month, monthGroup]) => (
-                <div class="flex flex-col sm:flex-row">
-                  <div class="mt-6 min-w-36 text-lg sm:my-6">
-                    <span class="font-bold">{months[Number(month) - 1]}</span>
-                    <sup class="text-xs">{monthGroup.length}</sup>
-                  </div>
-                  <ul>
-                    {monthGroup
+      years.map(yr => (
+        <div class="mb-8">
+          <div class="font-mono flex items-baseline gap-3 mb-3">
+            <span class="text-[24px] font-bold">{yr.year}</span>
+            <span
+              class="flex-1 h-px"
+              style="border-top: 1px dashed var(--border);"
+            />
+            <span class="text-[11px]" style="color: var(--muted);">
+              {yr.total} posts
+            </span>
+          </div>
+          <div class="grid grid-cols-12 gap-1.5 mb-2">
+            {Array.from({ length: 12 }).map((_, i) => {
+              const m = String(i + 1).padStart(2, "0");
+              const cell = yr.months[m];
+              const c = cell?.count ?? 0;
+              const op = c === 0 ? 0.08 : 0.25 + Math.min(c / 6, 0.75);
+              return (
+                <div
+                  class="aspect-square rounded-[2px] relative"
+                  style={`background: var(--accent); opacity: ${op}; cursor: ${c ? "default" : "default"};`}
+                  title={`${yr.year}-${m}: ${c} posts`}
+                >
+                  <span
+                    class="font-mono absolute left-1 top-0.5 text-[9px]"
+                    style="color: #0c0c08; opacity: 0.7;"
+                  >
+                    {m}
+                  </span>
+                  {c > 0 && (
+                    <span
+                      class="font-mono absolute right-1 bottom-0.5 text-[11px] font-semibold"
+                      style="color: #0c0c08;"
+                    >
+                      {c}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Per-month list (collapsed by default for compactness) */}
+          <ul class="m-0 p-0 list-none">
+            {Object.entries(yr.months)
+              .sort(([a], [b]) => Number(b) - Number(a))
+              .map(([month, cell]) => (
+                <li class="flex flex-col sm:flex-row gap-2 sm:gap-4 py-2">
+                  <span
+                    class="font-mono text-[11px] sm:text-[12px] sm:w-20 sm:text-right pt-1.5"
+                    style="color: var(--muted);"
+                  >
+                    {yr.year}-{month}
+                  </span>
+                  <ul class="m-0 p-0 list-none flex-1">
+                    {cell.posts
                       .sort(
                         (a, b) =>
-                          Math.floor(
-                            new Date(b.data.pubDatetime).getTime() / 1000
-                          ) -
-                          Math.floor(
-                            new Date(a.data.pubDatetime).getTime() / 1000
-                          )
+                          new Date(b.data.pubDatetime).getTime() -
+                          new Date(a.data.pubDatetime).getTime()
                       )
-                      .map(data => (
-                        <Card {...data} />
+                      .map(p => (
+                        <li>
+                          <a
+                            href={getPath(p.id, p.filePath)}
+                            class="term-card block px-2 py-1.5 no-underline"
+                          >
+                            <span
+                              class="font-mono text-[11px] tabular-nums mr-2"
+                              style="color: var(--muted);"
+                            >
+                              {dayjs(p.data.pubDatetime)
+                                .tz(SITE.timezone)
+                                .format("MM-DD")}
+                            </span>
+                            <span class="term-cn term-card-title text-[14px]">
+                              {p.data.title}
+                            </span>
+                          </a>
+                        </li>
                       ))}
                   </ul>
-                </div>
+                </li>
               ))}
-          </div>
-        ))
+          </ul>
+        </div>
+      ))
     }
-  </Main>
+  </main>
   <Footer />
 </Layout>

@@ -1,0 +1,788 @@
+---
+import { getCollection } from "astro:content";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import getSortedPosts from "@/utils/getSortedPosts";
+import getUniqueTags from "@/utils/getUniqueTags";
+import getPostsByTag from "@/utils/getPostsByTag";
+import { getPath } from "@/utils/getPath";
+import { SITE } from "@/config";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const allPosts = await getCollection("blog", ({ data }) => !data.draft);
+const sortedPosts = getSortedPosts(allPosts);
+const tags = getUniqueTags(allPosts).map(t => ({
+  name: t.tagName,
+  slug: t.tag,
+  count: getPostsByTag(allPosts, t.tag).length,
+}));
+
+type SearchPost = {
+  slug: string;
+  href: string;
+  title: string;
+  desc: string;
+  date: string;
+  tags: string[];
+};
+
+const indexPosts: SearchPost[] = sortedPosts.map(p => ({
+  slug: p.id,
+  href: getPath(p.id, p.filePath),
+  title: p.data.title,
+  desc: p.data.description ?? "",
+  date: dayjs(p.data.pubDatetime).tz(SITE.timezone).format("YYYY-MM-DD"),
+  tags: p.data.tags ?? [],
+}));
+
+const indexJson = JSON.stringify({ posts: indexPosts, tags });
+---
+
+<div id="cmdk-root" data-cmdk hidden>
+  <!-- Bundled search index -->
+  <script
+    is:inline
+    type="application/json"
+    id="cmdk-index"
+    set:html={indexJson}
+  />
+
+  <div class="cmdk-overlay" data-cmdk-overlay></div>
+
+  <div
+    role="dialog"
+    aria-modal="true"
+    aria-label="Search"
+    class="cmdk-shell"
+  >
+    <!-- chrome -->
+    <div class="cmdk-chrome">
+      <span class="cmdk-dots" aria-hidden="true">
+        <span style="background: var(--dot-red);"></span>
+        <span style="background: var(--dot-yellow);"></span>
+        <span style="background: var(--dot-green);"></span>
+      </span>
+      <span class="cmdk-title">~/ikun126.com — search.sh — ⌘K</span>
+      <span class="cmdk-esc">ESC</span>
+    </div>
+
+    <!-- prompt input row -->
+    <div class="cmdk-input-row">
+      <span class="cmdk-prompt">han@ikun126</span>
+      <span class="cmdk-muted">:~$</span>
+      <span class="cmdk-muted">grep -rn</span>
+      <span class="cmdk-input-wrap">
+        <span class="cmdk-quote">"</span>
+        <input
+          id="cmdk-input"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="文章、标签、关键字..."
+        />
+        <span class="cmdk-quote">"</span>
+        <span class="cmdk-muted cmdk-path">./posts/</span>
+      </span>
+    </div>
+
+    <!-- results -->
+    <div class="cmdk-body" id="cmdk-body"></div>
+
+    <!-- footer status -->
+    <div class="cmdk-footer">
+      <span><kbd>↑↓</kbd> 移动</span>
+      <span><kbd>↵</kbd> 打开</span>
+      <span><kbd>esc</kbd> 关闭</span>
+      <span class="cmdk-status" id="cmdk-status">
+        <span class="cmdk-dot"></span>
+        <span id="cmdk-status-text">idle</span>
+      </span>
+    </div>
+  </div>
+</div>
+
+<style is:global>
+  #cmdk-root[hidden] {
+    display: none;
+  }
+  #cmdk-root {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: grid;
+    place-items: flex-start center;
+    padding-top: 10vh;
+    font-family: var(--font-mono);
+    animation: cmdk-fade 0.14s ease-out;
+  }
+  @keyframes cmdk-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes cmdk-pop {
+    from {
+      opacity: 0;
+      transform: translateY(-6px) scale(0.99);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .cmdk-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(20, 18, 12, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  .cmdk-shell {
+    position: relative;
+    z-index: 1;
+    width: 600px;
+    max-width: 94vw;
+    background: var(--background);
+    color: var(--foreground);
+    border-radius: 3px;
+    box-shadow:
+      0 24px 80px rgba(0, 0, 0, 0.4),
+      0 0 0 1px var(--border);
+    overflow: hidden;
+    animation: cmdk-pop 0.18s ease-out;
+  }
+  .cmdk-chrome {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .cmdk-dots {
+    display: flex;
+    gap: 6px;
+  }
+  .cmdk-dots > span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .cmdk-title {
+    flex: 1;
+    text-align: center;
+    font-size: 10.5px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+  .cmdk-esc {
+    font-size: 10px;
+    color: var(--muted);
+    padding: 1px 6px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+  .cmdk-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    background: var(--background);
+    border-bottom: 1px dashed var(--border);
+    font-size: 13.5px;
+  }
+  .cmdk-prompt {
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .cmdk-muted {
+    color: var(--muted);
+  }
+  .cmdk-input-wrap {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+  }
+  .cmdk-quote {
+    color: var(--accent);
+  }
+  .cmdk-path {
+    margin: 0 6px;
+  }
+  #cmdk-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: inherit;
+    font: inherit;
+    font-family: var(--font-mono);
+    padding: 0 6px;
+    caret-color: var(--accent);
+    min-width: 0;
+  }
+  #cmdk-input::placeholder {
+    color: var(--muted);
+  }
+  .cmdk-body {
+    max-height: 420px;
+    overflow-y: auto;
+    background: var(--background);
+  }
+  .cmdk-section-title {
+    padding: 12px 18px 6px;
+    font-size: 10.5px;
+    color: var(--muted);
+    letter-spacing: 0.18em;
+  }
+  .cmdk-row {
+    padding: 10px 18px;
+    cursor: pointer;
+    display: flex;
+    gap: 14px;
+    align-items: baseline;
+    border-left: 2px solid transparent;
+    transition: all 0.08s;
+    color: inherit;
+    text-decoration: none;
+  }
+  .cmdk-row:hover,
+  .cmdk-row.is-sel {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border-left-color: var(--accent);
+  }
+  .cmdk-row .cmdk-idx {
+    color: var(--muted);
+    font-size: 11px;
+    width: 24px;
+    flex-shrink: 0;
+  }
+  .cmdk-row .cmdk-icon {
+    color: var(--accent);
+    font-size: 13px;
+    width: 14px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .cmdk-row .cmdk-row-main {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+  }
+  .cmdk-row .cmdk-row-title {
+    font-family: var(--font-cn);
+    font-size: 13.5px;
+    font-weight: 500;
+    margin-bottom: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .cmdk-row .cmdk-row-desc {
+    font-family: var(--font-cn);
+    font-size: 11.5px;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .cmdk-row .cmdk-row-date {
+    color: var(--muted);
+    font-size: 10.5px;
+    width: 80px;
+    flex-shrink: 0;
+  }
+  .cmdk-row .cmdk-row-tag {
+    color: var(--muted);
+    font-size: 10.5px;
+    flex-shrink: 0;
+    padding: 1px 6px;
+    background: var(--surface-2);
+    border-radius: 2px;
+  }
+  .cmdk-tags {
+    padding: 4px 18px 12px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .cmdk-tag {
+    padding: 3px 9px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    font-size: 11.5px;
+    cursor: pointer;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .cmdk-tag:hover {
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+  }
+  .cmdk-tag .cmdk-tag-count {
+    opacity: 0.55;
+    margin-left: 4px;
+  }
+  .cmdk-empty {
+    padding: 24px 18px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .cmdk-empty-hint {
+    margin-top: 8px;
+    font-size: 12px;
+  }
+  .cmdk-empty-hint .cmdk-suggest {
+    color: var(--accent);
+  }
+  .cmdk-hl {
+    background: color-mix(in srgb, var(--accent) 30%, transparent);
+    color: inherit;
+    padding: 0 2px;
+    border-radius: 1px;
+  }
+  .cmdk-footer {
+    padding: 8px 16px;
+    font-size: 10.5px;
+    color: var(--muted);
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .cmdk-footer kbd {
+    padding: 0 4px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    font-family: var(--font-mono);
+  }
+  .cmdk-status {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .cmdk-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+</style>
+
+<script>
+  type SearchPost = {
+    slug: string;
+    href: string;
+    title: string;
+    desc: string;
+    date: string;
+    tags: string[];
+  };
+  type SearchTag = { name: string; slug: string; count: number };
+
+  type CmdkRow = {
+    href: string;
+    render: () => HTMLElement;
+  };
+
+  const RECENT_KEY = "ikun-cmdk-recent";
+
+  function loadRecent(): string[] {
+    try {
+      const raw = localStorage.getItem(RECENT_KEY);
+      if (!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr.slice(0, 3) : [];
+    } catch {
+      return [];
+    }
+  }
+  function pushRecent(q: string) {
+    const trimmed = q.trim();
+    if (!trimmed) return;
+    const cur = loadRecent().filter(x => x !== trimmed);
+    cur.unshift(trimmed);
+    try {
+      localStorage.setItem(RECENT_KEY, JSON.stringify(cur.slice(0, 3)));
+    } catch {}
+  }
+
+  function highlight(text: string, q: string): (string | HTMLElement)[] {
+    if (!q) return [text];
+    const idx = text.toLowerCase().indexOf(q.toLowerCase());
+    if (idx < 0) return [text];
+    const span = document.createElement("span");
+    span.className = "cmdk-hl";
+    span.textContent = text.slice(idx, idx + q.length);
+    return [text.slice(0, idx), span, text.slice(idx + q.length)];
+  }
+
+  function appendNodes(parent: HTMLElement, parts: (string | HTMLElement)[]) {
+    for (const p of parts) {
+      if (typeof p === "string") parent.appendChild(document.createTextNode(p));
+      else parent.appendChild(p);
+    }
+  }
+
+  function init() {
+    const root = document.getElementById("cmdk-root");
+    if (!root || (root as any).__bound) return;
+    (root as any).__bound = true;
+
+    const indexEl = document.getElementById("cmdk-index");
+    let index: { posts: SearchPost[]; tags: SearchTag[] } = {
+      posts: [],
+      tags: [],
+    };
+    try {
+      index = JSON.parse(indexEl?.textContent ?? "{}");
+    } catch {}
+
+    const overlay = root.querySelector<HTMLElement>("[data-cmdk-overlay]")!;
+    const input = root.querySelector<HTMLInputElement>("#cmdk-input")!;
+    const body = root.querySelector<HTMLElement>("#cmdk-body")!;
+    const statusText = root.querySelector<HTMLElement>("#cmdk-status-text")!;
+
+    let rows: CmdkRow[] = [];
+    let sel = 0;
+
+    const QUICK_ACTIONS: { icon: string; label: string; hint: string; action: () => void }[] = [
+      {
+        icon: "↗",
+        label: "查看所有文章",
+        hint: "/posts",
+        action: () => {
+          window.location.href = "/posts/";
+        },
+      },
+      {
+        icon: "⊞",
+        label: "切换主题",
+        hint: "theme",
+        action: () => {
+          document.getElementById("theme-btn")?.click();
+        },
+      },
+      {
+        icon: "✦",
+        label: "随机一篇",
+        hint: "/random",
+        action: () => {
+          const posts = index.posts;
+          if (posts.length === 0) return;
+          const p = posts[Math.floor(Math.random() * posts.length)]!;
+          window.location.href = p.href;
+        },
+      },
+      {
+        icon: "↺",
+        label: "查看 RSS",
+        hint: "/rss",
+        action: () => {
+          window.location.href = "/rss.xml";
+        },
+      },
+    ];
+
+    function open() {
+      root!.hidden = false;
+      document.documentElement.style.overflow = "hidden";
+      input.value = "";
+      sel = 0;
+      render();
+      requestAnimationFrame(() => input.focus());
+    }
+    function close() {
+      root!.hidden = true;
+      document.documentElement.style.overflow = "";
+    }
+    function isOpen() {
+      return !root!.hidden;
+    }
+
+    function makeSection(label: string): HTMLElement {
+      const d = document.createElement("div");
+      d.className = "cmdk-section-title";
+      d.textContent = label;
+      return d;
+    }
+
+    function selectRow(href: string) {
+      pushRecent(input.value);
+      window.location.href = href;
+    }
+
+    function render() {
+      const q = input.value.trim();
+      body.innerHTML = "";
+      rows = [];
+
+      if (!q) {
+        // RECENT
+        const recents = loadRecent();
+        if (recents.length > 0) {
+          body.appendChild(makeSection("# RECENT"));
+          recents.forEach((r, i) => {
+            const row = document.createElement("button");
+            row.type = "button";
+            row.className = "cmdk-row";
+            const idx = document.createElement("span");
+            idx.className = "cmdk-idx";
+            idx.textContent = String(i + 1).padStart(2, "0");
+            const ic = document.createElement("span");
+            ic.className = "cmdk-icon";
+            ic.textContent = "↻";
+            const main = document.createElement("span");
+            main.className = "cmdk-row-main";
+            main.textContent = r;
+            const date = document.createElement("span");
+            date.className = "cmdk-row-date";
+            date.style.width = "auto";
+            date.style.flexShrink = "0";
+            date.textContent = "recent";
+            row.append(idx, ic, main, date);
+            row.addEventListener("click", () => {
+              input.value = r;
+              render();
+              input.focus();
+            });
+            body.appendChild(row);
+            rows.push({ href: "#", render: () => row });
+          });
+        }
+
+        // QUICK ACTIONS
+        body.appendChild(makeSection("# QUICK ACTIONS"));
+        QUICK_ACTIONS.forEach(a => {
+          const row = document.createElement("button");
+          row.type = "button";
+          row.className = "cmdk-row";
+          const idx = document.createElement("span");
+          idx.className = "cmdk-idx";
+          idx.textContent = "›";
+          const ic = document.createElement("span");
+          ic.className = "cmdk-icon";
+          ic.textContent = a.icon;
+          const main = document.createElement("span");
+          main.className = "cmdk-row-main";
+          main.style.fontFamily = "var(--font-cn)";
+          main.textContent = a.label;
+          const hint = document.createElement("span");
+          hint.className = "cmdk-row-tag";
+          hint.textContent = a.hint;
+          row.append(idx, ic, main, hint);
+          row.addEventListener("click", () => {
+            close();
+            a.action();
+          });
+          body.appendChild(row);
+          rows.push({ href: "#action", render: () => row });
+        });
+
+        statusText.textContent = "idle";
+      } else {
+        const ql = q.toLowerCase();
+
+        // TAGS
+        const tagMatches = index.tags
+          .filter(t => t.name.toLowerCase().includes(ql))
+          .slice(0, 6);
+        if (tagMatches.length > 0) {
+          const head = makeSection(`# TAGS · ${tagMatches.length}`);
+          body.appendChild(head);
+          const wrap = document.createElement("div");
+          wrap.className = "cmdk-tags";
+          tagMatches.forEach(t => {
+            const a = document.createElement("a");
+            a.className = "cmdk-tag";
+            a.href = `/tags/${t.slug}/`;
+            a.innerHTML = "";
+            a.appendChild(document.createTextNode(`#${t.name} `));
+            const c = document.createElement("span");
+            c.className = "cmdk-tag-count";
+            c.textContent = String(t.count);
+            a.appendChild(c);
+            a.addEventListener("click", e => {
+              e.preventDefault();
+              selectRow(`/tags/${t.slug}/`);
+            });
+            wrap.appendChild(a);
+          });
+          body.appendChild(wrap);
+        }
+
+        // POSTS
+        const postMatches = index.posts.filter(
+          p =>
+            p.title.toLowerCase().includes(ql) ||
+            p.desc.toLowerCase().includes(ql) ||
+            p.tags.some(t => t.toLowerCase().includes(ql))
+        );
+        body.appendChild(makeSection(`# POSTS · ${postMatches.length}`));
+
+        if (postMatches.length === 0) {
+          const empty = document.createElement("div");
+          empty.className = "cmdk-empty";
+          const line1 = document.createElement("div");
+          line1.textContent = "$ grep: no matches for ";
+          const qSpan = document.createElement("span");
+          qSpan.style.color = "var(--accent)";
+          qSpan.textContent = `"${q}"`;
+          line1.appendChild(qSpan);
+          line1.append(" in ./posts/");
+          empty.appendChild(line1);
+
+          const line2 = document.createElement("div");
+          line2.className = "cmdk-empty-hint";
+          line2.append("// 试试 ");
+          ["agent", "engineering", "thinking"].forEach((s, i) => {
+            const sp = document.createElement("span");
+            sp.className = "cmdk-suggest";
+            sp.textContent = s;
+            sp.style.cursor = "pointer";
+            sp.addEventListener("click", () => {
+              input.value = s;
+              render();
+              input.focus();
+            });
+            line2.appendChild(sp);
+            if (i < 2) line2.append(", ");
+          });
+          empty.appendChild(line2);
+          body.appendChild(empty);
+        } else {
+          postMatches.forEach((p, i) => {
+            const row = document.createElement("button");
+            row.type = "button";
+            row.className = "cmdk-row";
+            const date = document.createElement("span");
+            date.className = "cmdk-row-date";
+            date.textContent = p.date;
+
+            const ic = document.createElement("span");
+            ic.className = "cmdk-icon";
+            ic.style.width = "16px";
+            ic.textContent = i === 0 ? "▸" : " ";
+            ic.dataset.icon = "1";
+
+            const main = document.createElement("div");
+            main.className = "cmdk-row-main";
+            const title = document.createElement("div");
+            title.className = "cmdk-row-title";
+            appendNodes(title, highlight(p.title, q));
+            const desc = document.createElement("div");
+            desc.className = "cmdk-row-desc";
+            desc.textContent = p.desc;
+            main.append(title, desc);
+
+            const reading = document.createElement("span");
+            reading.className = "cmdk-row-tag";
+            const min = Math.max(2, Math.round(p.desc.length / 50));
+            reading.textContent = `${min} min`;
+
+            row.append(date, ic, main, reading);
+            row.addEventListener("click", () => selectRow(p.href));
+            body.appendChild(row);
+            rows.push({
+              href: p.href,
+              render: () => row,
+            });
+          });
+        }
+
+        statusText.textContent = `${postMatches.length} matches`;
+      }
+
+      // mark first as selected
+      sel = Math.min(sel, Math.max(0, rows.length - 1));
+      updateSel();
+    }
+
+    function updateSel() {
+      const all = body.querySelectorAll<HTMLElement>(".cmdk-row");
+      all.forEach((el, i) => {
+        el.classList.toggle("is-sel", i === sel);
+        const ic = el.querySelector<HTMLElement>('[data-icon="1"]');
+        if (ic) ic.textContent = i === sel ? "▸" : " ";
+        if (i === sel)
+          el.scrollIntoView({ block: "nearest", behavior: "instant" as any });
+      });
+    }
+
+    input.addEventListener("input", () => {
+      sel = 0;
+      render();
+    });
+
+    root.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        close();
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (rows.length === 0) return;
+        sel = Math.min(rows.length - 1, sel + 1);
+        updateSel();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (rows.length === 0) return;
+        sel = Math.max(0, sel - 1);
+        updateSel();
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        const all = body.querySelectorAll<HTMLElement>(".cmdk-row");
+        all[sel]?.click();
+      }
+    });
+
+    overlay.addEventListener("click", close);
+
+    // Public openers
+    window.addEventListener("open-cmdk", () => open());
+
+    // Global hotkey
+    const w = window as unknown as { __ikunCmdkBound?: boolean };
+    if (!w.__ikunCmdkBound) {
+      w.__ikunCmdkBound = true;
+      window.addEventListener("keydown", e => {
+        const target = e.target as HTMLElement | null;
+        const tag = target?.tagName;
+        if (
+          isOpen() ||
+          tag === "INPUT" ||
+          tag === "TEXTAREA" ||
+          target?.isContentEditable
+        ) {
+          // Allow ⌘K from any input to still open (parity with most cmdk impls).
+          if (
+            (e.metaKey || e.ctrlKey) &&
+            e.key.toLowerCase() === "k" &&
+            !isOpen()
+          ) {
+            e.preventDefault();
+            window.dispatchEvent(new CustomEvent("open-cmdk"));
+          }
+          return;
+        }
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+          e.preventDefault();
+          window.dispatchEvent(new CustomEvent("open-cmdk"));
+        }
+      });
+    }
+  }
+
+  init();
+  document.addEventListener("astro:page-load", init);
+</script>

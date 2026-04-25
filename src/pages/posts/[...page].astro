@@ -1,7 +1,6 @@
 ---
 import type { GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
-import Main from "@/layouts/Main.astro";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
@@ -16,15 +15,42 @@ export const getStaticPaths = (async ({ paginate }) => {
 }) satisfies GetStaticPaths;
 
 const { page } = Astro.props;
+
+const allPosts = await getCollection("blog", ({ data }) => !data.draft);
+const total = allPosts.length;
 ---
 
 <Layout title={`Posts | ${SITE.title}`}>
   <Header />
-  <Main pageTitle="Posts" pageDesc="All the articles I've posted.">
-    <ul>
+  <main id="main-content" class="app-layout pt-7 pb-4">
+    <div
+      class="font-mono text-[12.5px]"
+      style="color: color-mix(in srgb, var(--foreground) 70%, transparent);"
+    >
+      <span class="term-prompt">han@ikun126</span><span style="color: var(--muted);"
+        >:~$</span
+      > ls -lat ./posts/ | head -n {SITE.postPerPage}
+    </div>
+    <h2 class="term-cn text-[28px] font-bold mt-3 mb-1">
+      所有文章
+      <span
+        class="font-mono text-[14px] font-normal"
+        style="color: var(--muted);"
+      >
+        ({total} 篇)
+      </span>
+    </h2>
+    <p
+      class="font-mono text-[12px] mt-1 mb-4"
+      style="color: var(--muted);"
+    >
+      // page {page.currentPage} / {page.lastPage}
+    </p>
+
+    <ul class="m-0 p-0 list-none">
       {page.data.map(data => <Card {...data} />)}
     </ul>
-  </Main>
+  </main>
 
   <Pagination {page} />
 

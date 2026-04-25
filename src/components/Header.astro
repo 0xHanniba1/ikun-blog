@@ -1,24 +1,66 @@
 ---
-import IconX from "@/assets/icons/IconX.svg";
-import IconMoon from "@/assets/icons/IconMoon.svg";
-import IconSearch from "@/assets/icons/IconSearch.svg";
-import IconArchive from "@/assets/icons/IconArchive.svg";
-import IconSunHigh from "@/assets/icons/IconSunHigh.svg";
-import IconMenuDeep from "@/assets/icons/IconMenuDeep.svg";
-import LinkButton from "./LinkButton.astro";
 import { SITE } from "@/config";
+import { SOCIALS } from "@/constants";
+import IconGitHub from "@/assets/icons/IconGitHub.svg";
+import IconBrandX from "@/assets/icons/IconBrandX.svg";
+import IconRss from "@/assets/icons/IconRss.svg";
+
+type Props = {
+  page?: string; // window-chrome subtitle, e.g. "home", "posts", "hello-world.md"
+};
 
 const { pathname } = Astro.url;
-
-// Remove trailing slash from current pathname if exists
 const currentPath =
   pathname.endsWith("/") && pathname !== "/" ? pathname.slice(0, -1) : pathname;
 
-const isActive = (path: string) => {
-  const currentPathArray = currentPath.split("/").filter(p => p.trim());
-  const pathArray = path.split("/").filter(p => p.trim());
+const navItems = [
+  { key: "home", label: "~", href: "/" },
+  { key: "posts", label: "/posts", href: "/posts/" },
+  { key: "tags", label: "/tags", href: "/tags/" },
+  ...(SITE.showArchives
+    ? [{ key: "archive", label: "/archive", href: "/archives/" }]
+    : []),
+  { key: "about", label: "/about", href: "/about/" },
+];
 
-  return currentPath === path || currentPathArray[0] === pathArray[0];
+function activeKey(p: string): string {
+  if (p === "/" || p === "") return "home";
+  if (p.startsWith("/posts")) return "posts";
+  if (p.startsWith("/tags")) return "tags";
+  if (p.startsWith("/archives")) return "archive";
+  if (p.startsWith("/about")) return "about";
+  if (p.startsWith("/search")) return "posts";
+  return "";
+}
+
+const active = activeKey(currentPath);
+
+const host = (() => {
+  try {
+    return SITE.website.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  } catch {
+    return "ikun126.com";
+  }
+})();
+
+const page =
+  Astro.props.page ??
+  (active === "home"
+    ? "home"
+    : active === "posts"
+      ? "posts"
+      : active === "tags"
+        ? "tags"
+        : active === "archive"
+          ? "archive"
+          : active === "about"
+            ? "about.md"
+            : "shell");
+
+// Map social name -> icon component
+const ICON_BY_NAME: Record<string, any> = {
+  GitHub: IconGitHub,
+  X: IconBrandX,
 };
 ---
 
@@ -30,140 +72,183 @@ const isActive = (path: string) => {
   Skip to content
 </a>
 
-<header
-  class="app-layout flex flex-col items-center justify-between sm:flex-row"
+<!-- Window chrome (mac traffic lights + zsh title bar) -->
+<div
+  class="flex items-center gap-3 py-2.5 px-4 sm:px-5"
+  style="background: var(--surface); border-bottom: 1px solid var(--border);"
 >
-  <div
-    id="top-nav-wrap"
-    class:list={[
-      "py-4 sm:py-6",
-      "border-b border-border",
-      "relative w-full bg-background",
-      "flex items-baseline justify-between sm:items-center",
-    ]}
+    <div class="mac-dots flex gap-2" aria-hidden="true">
+      <span class="mac-dot mac-dot-red"></span>
+      <span class="mac-dot mac-dot-yellow"></span>
+      <span class="mac-dot mac-dot-green"></span>
+    </div>
+    <div
+      class="flex-1 text-center text-[11px] truncate"
+      style="color: var(--muted);"
+    >
+      ~/{host} — {page} — zsh
+    </div>
+    <button
+      id="theme-btn"
+      class="text-[11px] cursor-pointer hover:text-accent transition-colors"
+      style="color: var(--muted);"
+      title="Toggle light / dark"
+      aria-label="auto"
+      aria-live="polite"
+    >
+      <span class="theme-light-label">[◑ light]</span>
+      <span class="theme-dark-label">[◐ dark]</span>
+    </button>
+</div>
+
+<!-- Terminal-style nav -->
+<header>
+  <nav
+    id="nav-menu"
+    class="flex flex-wrap items-center gap-x-5 gap-y-2 py-3.5 px-4 sm:px-5 text-[13px]"
+    style="border-bottom: 1px dashed var(--border);"
   >
     <a
       href="/"
-      class="absolute py-1 text-xl leading-8 font-semibold whitespace-nowrap sm:static sm:my-auto sm:text-2xl sm:leading-none"
+      class="font-semibold whitespace-nowrap"
+      style="color: var(--accent);"
     >
-      {SITE.title}
+      ~$ <span class="term-cn" style="color: var(--foreground);"
+        >{SITE.title}</span
+      >
     </a>
-    <nav
-      id="nav-menu"
-      class="flex w-full flex-col items-center sm:ms-2 sm:flex-row sm:justify-end sm:space-x-4 sm:py-0"
-    >
-      <button
-        id="menu-btn"
-        class="focus-outline self-end p-2 sm:hidden"
-        aria-label="Open Menu"
-        aria-expanded="false"
-        aria-controls="menu-items"
-      >
-        <IconX id="close-icon" class="hidden" />
-        <IconMenuDeep id="menu-icon" />
-      </button>
-      <ul
-        id="menu-items"
-        class:list={[
-          "mt-4 grid w-44 grid-cols-2 place-content-center gap-2",
-          "[&>li>a]:block [&>li>a]:px-4 [&>li>a]:py-3 [&>li>a]:text-center [&>li>a]:font-medium [&>li>a]:hover:text-accent sm:[&>li>a]:px-2 sm:[&>li>a]:py-1",
-          "hidden",
-          "sm:mt-0 sm:flex sm:w-auto sm:gap-x-5 sm:gap-y-0",
-        ]}
-      >
-        <li class="col-span-2">
-          <a href="/posts" class:list={{ "active-nav": isActive("/posts") }}>
-            Posts
-          </a>
-        </li>
-        <li class="col-span-2">
-          <a href="/tags" class:list={{ "active-nav": isActive("/tags") }}>
-            Tags
-          </a>
-        </li>
-        <li class="col-span-2">
-          <a href="/about" class:list={{ "active-nav": isActive("/about") }}>
-            About
-          </a>
-        </li>
-        {
-          SITE.showArchives && (
-            <li class="col-span-2">
-              <LinkButton
-                href="/archives"
-                class:list={[
-                  "focus-outline flex justify-center p-3 sm:p-1",
-                  {
-                    "active-nav [&>svg]:stroke-accent": isActive("/archives"),
-                  },
-                ]}
-                title="Archives"
-                aria-label="archives"
-              >
-                <IconArchive class="hidden sm:inline-block" />
-                <span class="sm:sr-only">Archives</span>
-              </LinkButton>
-            </li>
-          )
-        }
-        <li class="col-span-1 flex items-center justify-center">
-          <LinkButton
-            href="/search"
-            class:list={[
-              "focus-outline flex p-3 sm:p-1",
-              { "[&>svg]:stroke-accent": isActive("/search") },
-            ]}
-            title="Search"
-            aria-label="search"
+    <span style="color: var(--muted);" class="hidden sm:inline">|</span>
+    <span style="color: var(--muted);" class="hidden md:inline">nav$</span>
+    {
+      navItems.map(item => {
+        const isActive = active === item.key;
+        return (
+          <a
+            href={item.href}
+            class:list={["whitespace-nowrap transition-colors hover:text-accent"]}
+            style={
+              isActive
+                ? "color: var(--accent); font-weight: 600;"
+                : "color: var(--muted);"
+            }
           >
-            <IconSearch />
-            <span class="sr-only">Search</span>
-          </LinkButton>
-        </li>
-        {
-          SITE.lightAndDarkMode && (
-            <li class="col-span-1 flex items-center justify-center">
-              <button
-                id="theme-btn"
-                class="focus-outline relative size-12 p-4 sm:size-8 hover:[&>svg]:stroke-accent"
-                title="Toggles light & dark"
-                aria-label="auto"
-                aria-live="polite"
-              >
-                <IconMoon class="absolute top-[50%] left-[50%] -translate-[50%] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-                <IconSunHigh class="absolute top-[50%] left-[50%] -translate-[50%] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-              </button>
-            </li>
-          )
-        }
-      </ul>
-    </nav>
-  </div>
+            {isActive ? "> " : "  "}
+            {item.label}
+          </a>
+        );
+      })
+    }
+
+    <span class="ms-auto flex items-center gap-2">
+      <button
+        type="button"
+        id="cmdk-trigger"
+        class="term-searchbox"
+        title="Search posts (⌘K)"
+        aria-label="Search posts"
+      >
+        <svg
+          width="11"
+          height="11"
+          viewBox="0 0 16 16"
+          aria-hidden="true"
+          style="flex-shrink: 0; opacity: 0.7;"
+        >
+          <circle
+            cx="7"
+            cy="7"
+            r="5"
+            stroke="currentColor"
+            stroke-width="1.4"
+            fill="none"></circle>
+          <path
+            d="M11 11l3.5 3.5"
+            stroke="currentColor"
+            stroke-width="1.4"
+            stroke-linecap="round"></path>
+        </svg>
+        <span style="opacity: 0.6; flex: 1; text-align: left;">search posts...</span>
+        <kbd
+          class="hidden sm:inline-block"
+          style="font-size: 9.5px; padding: 1px 5px; border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent); border-radius: 2px; opacity: 0.7; font-family: var(--font-mono);"
+          >⌘K</kbd
+        >
+      </button>
+      {
+        SOCIALS.map(s => {
+          const Icon = ICON_BY_NAME[s.name];
+          return (
+            <a
+              href={s.href}
+              class="term-social"
+              title={s.linkTitle}
+              aria-label={s.linkTitle}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {Icon && (
+                <Icon class="size-3.5 fill-transparent stroke-current stroke-2" />
+              )}
+            </a>
+          );
+        })
+      }
+      <a
+        href="/rss.xml"
+        class="term-social"
+        title="RSS Feed"
+        aria-label="RSS Feed"
+      >
+        <IconRss class="size-3.5 fill-transparent stroke-current stroke-2" />
+      </a>
+    </span>
+  </nav>
 </header>
 
+<style is:global>
+  /* Light theme: show light label, hide dark; dark theme inverts. */
+  html[data-theme="light"] #theme-btn .theme-dark-label,
+  html:not([data-theme="dark"]) #theme-btn .theme-dark-label {
+    display: none;
+  }
+  html[data-theme="dark"] #theme-btn .theme-light-label {
+    display: none;
+  }
+</style>
+
 <script>
-  function toggleNav() {
-    const menuBtn = document.querySelector("#menu-btn");
-    const menuItems = document.querySelector("#menu-items");
-    const menuIcon = document.querySelector("#menu-icon");
-    const closeIcon = document.querySelector("#close-icon");
-
-    if (!menuBtn || !menuItems || !menuIcon || !closeIcon) return;
-
-    menuBtn.addEventListener("click", () => {
-      const openMenu = menuBtn.getAttribute("aria-expanded") === "true";
-
-      menuBtn.setAttribute("aria-expanded", openMenu ? "false" : "true");
-      menuBtn.setAttribute("aria-label", openMenu ? "Open Menu" : "Close Menu");
-
-      menuItems.classList.toggle("hidden");
-      menuIcon.classList.toggle("hidden");
-      closeIcon.classList.toggle("hidden");
+  // ── ⌘K trigger button → open command palette ──────────────
+  function bindCmdkTrigger() {
+    const btn = document.getElementById("cmdk-trigger");
+    if (!btn || btn.dataset.bound === "1") return;
+    btn.dataset.bound = "1";
+    btn.addEventListener("click", () => {
+      window.dispatchEvent(new CustomEvent("open-cmdk"));
     });
   }
+  bindCmdkTrigger();
+  document.addEventListener("astro:page-load", bindCmdkTrigger);
 
-  toggleNav();
-
-  // Runs on view transitions navigation
-  document.addEventListener("astro:after-swap", toggleNav);
+  // ── Theme toggle: rebind on every page-load (view-transition) ───
+  function bindThemeBtn() {
+    const btn = document.getElementById("theme-btn");
+    if (!btn || btn.dataset.bound === "1") return;
+    btn.dataset.bound = "1";
+    btn.addEventListener("click", () => {
+      const html = document.documentElement;
+      const next = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      html.setAttribute("data-theme", next);
+      try {
+        localStorage.setItem("theme", next);
+      } catch {}
+      btn.setAttribute("aria-label", next);
+      // Sync <meta name="theme-color"> to current bg.
+      const bg = window.getComputedStyle(document.body).backgroundColor;
+      document
+        .querySelector('meta[name="theme-color"]')
+        ?.setAttribute("content", bg);
+    });
+  }
+  bindThemeBtn();
+  document.addEventListener("astro:page-load", bindThemeBtn);
 </script>

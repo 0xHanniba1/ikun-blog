@@ -1,33 +1,68 @@
 ---
 import type { CollectionEntry } from "astro:content";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import { slugifyStr } from "@/utils/slugify";
 import { getPath } from "@/utils/getPath";
-import Datetime from "./Datetime.astro";
+import { SITE } from "@/config";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 type Props = {
   variant?: "h2" | "h3";
 } & CollectionEntry<"blog">;
 
 const { variant: Heading = "h2", id, data, filePath } = Astro.props;
+const { title, description, pubDatetime, modDatetime, tags } = data;
 
-const { title, description, ...props } = data;
+const date = dayjs(modDatetime ?? pubDatetime)
+  .tz(SITE.timezone)
+  .format("YYYY-MM-DD");
 ---
 
-<li class="my-6">
+<li>
   <a
     href={getPath(id, filePath)}
-    class:list={[
-      "inline-block text-lg font-medium text-accent",
-      "decoration-dashed underline-offset-4 hover:underline",
-      "focus-visible:no-underline focus-visible:underline-offset-0",
-    ]}
+    class="term-card block px-3 py-4 sm:px-4 no-underline"
+    style="border-top: 1px dashed var(--border);"
   >
-    <Heading
-      style={{ viewTransitionName: slugifyStr(title.replaceAll(".", "-")) }}
-    >
-      {title}
-    </Heading>
+    <div class="flex items-baseline gap-3 sm:gap-4">
+      <span
+        class="font-mono text-[11px] tabular-nums whitespace-nowrap"
+        style="color: var(--muted); width: 84px; flex-shrink: 0;"
+      >
+        {date}
+      </span>
+      <Heading
+        class="term-cn term-card-title text-[15px] sm:text-[17px] font-semibold leading-snug m-0 flex-1"
+        style={{ viewTransitionName: slugifyStr(title.replaceAll(".", "-")) }}
+      >
+        {title}
+      </Heading>
+    </div>
+    {
+      description && (
+        <p
+          class="term-cn text-[13px] sm:text-sm leading-[1.7] mt-2 mb-2 ps-0 sm:ps-[100px]"
+          style="color: color-mix(in srgb, var(--foreground) 75%, transparent);"
+        >
+          {description}
+        </p>
+      )
+    }
+    {
+      tags && tags.length > 0 && (
+        <div
+          class="font-mono text-[11px] flex flex-wrap gap-1.5 ps-0 sm:ps-[100px]"
+          style="color: var(--muted);"
+        >
+          {tags.map(t => (
+            <span class="term-tag">#{t}</span>
+          ))}
+        </div>
+      )
+    }
   </a>
-  <Datetime {...props} />
-  <p>{description}</p>
 </li>

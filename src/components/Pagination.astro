@@ -1,43 +1,61 @@
 ---
 import type { Page } from "astro";
 import type { CollectionEntry } from "astro:content";
-import IconArrowLeft from "@/assets/icons/IconArrowLeft.svg";
-import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
-import LinkButton from "./LinkButton.astro";
 
 type Props = {
   page: Page<CollectionEntry<"blog">>;
 };
 
 const { page } = Astro.props;
+
+const total = page.lastPage;
+const cur = page.currentPage;
+const start = (cur - 1) * page.size + 1;
+const end = Math.min(cur * page.size, page.total);
 ---
 
 {
   page.lastPage > 1 && (
     <nav
-      class="mt-auto mb-8 flex justify-center"
+      class="app-layout flex items-center gap-2 py-5 text-[12px] flex-wrap"
+      style="border-top: 1px dashed var(--border); color: var(--muted);"
       role="navigation"
       aria-label="Pagination Navigation"
     >
-      <LinkButton
-        disabled={!page.url.prev}
-        href={page.url.prev as string}
-        class:list={["me-4 select-none", { "opacity-50": !page.url.prev }]}
-        aria-label="Goto Previous Page"
+      <span>
+        page {cur} / {total} · {start}–{end} of {page.total}
+      </span>
+      <span class="flex-1" />
+      <a
+        href={page.url.prev ?? "#"}
+        class:list={["term-btn no-underline", { "opacity-40 pointer-events-none": !page.url.prev }]}
+        aria-disabled={!page.url.prev}
+        aria-label="Previous page"
       >
-        <IconArrowLeft class="inline-block rtl:rotate-180" />
-        Prev
-      </LinkButton>
-      {page.currentPage} / {page.lastPage}
-      <LinkButton
-        disabled={!page.url.next}
-        href={page.url.next as string}
-        class:list={["ms-4 select-none", { "opacity-50": !page.url.next }]}
-        aria-label="Goto Next Page"
+        ← prev
+      </a>
+      {Array.from({ length: total }).map((_, i) => {
+        const n = i + 1;
+        const href = n === 1 ? "/posts/" : `/posts/${n}/`;
+        return (
+          <a
+            href={href}
+            class:list={["term-btn no-underline", { "is-active": n === cur }]}
+            style="min-width: 30px; justify-content: center;"
+            aria-current={n === cur ? "page" : undefined}
+          >
+            {n}
+          </a>
+        );
+      })}
+      <a
+        href={page.url.next ?? "#"}
+        class:list={["term-btn no-underline", { "opacity-40 pointer-events-none": !page.url.next }]}
+        aria-disabled={!page.url.next}
+        aria-label="Next page"
       >
-        Next
-        <IconArrowRight class="inline-block rtl:rotate-180" />
-      </LinkButton>
+        next →
+      </a>
     </nav>
   )
 }

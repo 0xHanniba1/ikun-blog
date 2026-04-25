@@ -1,19 +1,20 @@
 ---
 import { render, type CollectionEntry } from "astro:content";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
-import Tag from "@/components/Tag.astro";
-import Datetime from "@/components/Datetime.astro";
 import EditPost from "@/components/EditPost.astro";
 import ShareLinks from "@/components/ShareLinks.astro";
-import BackButton from "@/components/BackButton.astro";
 import BackToTopButton from "@/components/BackToTopButton.astro";
 import { getPath } from "@/utils/getPath";
 import { slugifyStr } from "@/utils/slugify";
-import IconChevronLeft from "@/assets/icons/IconChevronLeft.svg";
-import IconChevronRight from "@/assets/icons/IconChevronRight.svg";
 import { SITE } from "@/config";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 type Props = {
   post: CollectionEntry<"blog">;
@@ -30,7 +31,7 @@ const {
   canonicalURL,
   pubDatetime,
   modDatetime,
-  timezone,
+  timezone: postTimezone,
   tags,
   hideEditPost,
 } = post.data;
@@ -38,20 +39,14 @@ const {
 const { Content } = await render(post);
 
 let ogImageUrl: string | undefined;
-
-// Determine OG image source
 if (typeof initOgImage === "string") {
-  ogImageUrl = initOgImage; // Remote OG image (absolute URL)
+  ogImageUrl = initOgImage;
 } else if (initOgImage?.src) {
-  ogImageUrl = initOgImage.src; // Local asset
+  ogImageUrl = initOgImage.src;
 }
-
-// Use dynamic OG image if enabled and no remote|local ogImage
 if (!ogImageUrl && SITE.dynamicOgImage) {
   ogImageUrl = `${getPath(post.id, post.filePath)}/index.png`;
 }
-
-// Resolve OG image URL (or fallback to SITE.ogImage / default `og.png`)
 const ogImage = ogImageUrl
   ? new URL(ogImageUrl, Astro.url.origin).href
   : undefined;
@@ -67,79 +62,121 @@ const layoutProps = {
   scrollSmooth: true,
 };
 
-/* ========== Prev/Next Posts ========== */
+const pubDate = dayjs(pubDatetime).tz(postTimezone || SITE.timezone);
+const isModified = modDatetime && modDatetime > pubDatetime;
 
+// File-name display: posts/YYYY-MM-DD-slug.md
+const slug = post.id;
+const filenameDisplay = `posts/${pubDate.format("YYYY-MM-DD")}-${slug}.md`;
+
+// Approximate reading time: ~300 cn chars/min, fallback to 4 min
+const charCount = description.length + title.length;
+const readMin = Math.max(4, Math.round(charCount / 80));
+
+/* Prev/Next */
 const allPosts = posts.map(({ data: { title }, id, filePath }) => ({
   id,
   title,
   filePath,
 }));
-
 const currentPostIndex = allPosts.findIndex(a => a.id === post.id);
-
 const prevPost = currentPostIndex !== 0 ? allPosts[currentPostIndex - 1] : null;
 const nextPost =
   currentPostIndex !== allPosts.length ? allPosts[currentPostIndex + 1] : null;
 ---
 
 <Layout {...layoutProps}>
-  <Header />
-  <BackButton />
+  <Header page={`${slug}.md`} />
   <main
     id="main-content"
-    class:list={["app-layout pb-12", { "mt-8": !SITE.showBackButton }]}
+    class="app-layout pt-7 pb-12"
     data-pagefind-body
   >
+    <div
+      class="font-mono text-[12px] mb-1.5"
+      style="color: var(--muted);"
+    >
+      {filenameDisplay}
+    </div>
+
     <h1
       transition:name={slugifyStr(title.replaceAll(".", "-"))}
-      class="inline-block text-2xl font-bold text-accent sm:text-3xl"
+      class="term-cn text-[28px] sm:text-[34px] font-extrabold leading-[1.2] tracking-tight m-0"
     >
       {title}
     </h1>
-    <div class="my-2 flex items-center gap-2">
-      <Datetime {pubDatetime} {modDatetime} {timezone} size="lg" />
-      <span
-        aria-hidden="true"
-        class:list={[
-          "max-sm:hidden",
-          { hidden: !SITE.editPost.enabled || hideEditPost },
-        ]}>|</span
-      >
-      <EditPost {hideEditPost} {post} class="max-sm:hidden" />
+
+    <div
+      class="font-mono text-[12px] flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-4 pb-4"
+      style="color: var(--muted); border-bottom: 1px dashed var(--border);"
+    >
+      <span>{pubDate.format("YYYY-MM-DD")}</span>
+      <span aria-hidden="true">·</span>
+      <span>{readMin} min</span>
+      {
+        isModified && (
+          <>
+            <span aria-hidden="true">·</span>
+            <span>
+              updated{" "}
+              {dayjs(modDatetime)
+                .tz(postTimezone || SITE.timezone)
+                .format("YYYY-MM-DD")}
+            </span>
+          </>
+        )
+      }
+      {
+        tags && tags.length > 0 && (
+          <>
+            <span class="flex-1 hidden sm:inline-block" />
+            <span class="flex flex-wrap gap-1.5">
+              {tags.map(t => (
+                <a href={`/tags/${slugifyStr(t)}/`} class="term-tag no-underline">
+                  #{t}
+                </a>
+              ))}
+            </span>
+          </>
+        )
+      }
     </div>
+
     <article
       id="article"
-      class="app-prose mt-8 w-full max-w-app prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)"
+      class="app-prose mt-7 w-full max-w-app"
     >
       <Content />
     </article>
 
-    <hr class="my-8 border-dashed" />
+    <hr class="my-8" style="border-top: 1px dashed var(--border);" />
 
-    <EditPost class="sm:hidden" {hideEditPost} {post} />
-
-    <ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8">
-      {tags.map(tag => <Tag tag={slugifyStr(tag)} tagName={tag} size="sm" />)}
-    </ul>
+    <EditPost {hideEditPost} {post} />
 
     <BackToTopButton />
 
     <ShareLinks />
 
-    <hr class="my-6 border-dashed" />
+    <hr class="my-6" style="border-top: 1px dashed var(--border);" />
 
-    <!-- Previous/Next Post Buttons -->
-    <div data-pagefind-ignore class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+    <!-- Prev/Next -->
+    <div
+      data-pagefind-ignore
+      class="font-mono text-[12px] grid grid-cols-1 sm:grid-cols-2 gap-4"
+      style="color: var(--muted);"
+    >
       {
         prevPost && (
           <a
             href={getPath(prevPost.id, prevPost.filePath)}
-            class="flex w-full gap-1 hover:opacity-75"
+            class="term-card block px-2 py-2 no-underline"
           >
-            <IconChevronLeft class="inline-block flex-none rtl:rotate-180" />
-            <div>
-              <span>Previous Post</span>
-              <div class="text-sm text-accent/85">{prevPost.title}</div>
+            <span style="color: var(--muted);">← prev</span>
+            <div
+              class="term-cn text-[14px] mt-0.5"
+              style="color: var(--accent);"
+            >
+              {prevPost.title}
             </div>
           </a>
         )
@@ -148,13 +185,15 @@ const nextPost =
         nextPost && (
           <a
             href={getPath(nextPost.id, nextPost.filePath)}
-            class="flex w-full justify-end gap-1 text-end hover:opacity-75 sm:col-start-2"
+            class="term-card block px-2 py-2 no-underline text-right sm:col-start-2"
           >
-            <div>
-              <span>Next Post</span>
-              <div class="text-sm text-accent/85">{nextPost.title}</div>
+            <span style="color: var(--muted);">next →</span>
+            <div
+              class="term-cn text-[14px] mt-0.5"
+              style="color: var(--accent);"
+            >
+              {nextPost.title}
             </div>
-            <IconChevronRight class="inline-block flex-none rtl:rotate-180" />
           </a>
         )
       }
@@ -164,29 +203,21 @@ const nextPost =
 </Layout>
 
 <script is:inline data-astro-rerun>
-  /** Create a progress indicator
-   *  at the top */
+  /* Top progress bar */
   function createProgressBar() {
-    // Create the main container div
-    const progressContainer = document.createElement("div");
-    progressContainer.className =
-      "progress-container fixed top-0 z-10 h-1 w-full bg-background";
-
-    // Create the progress bar div
-    const progressBar = document.createElement("div");
-    progressBar.className = "progress-bar h-1 w-0 bg-accent";
-    progressBar.id = "myBar";
-
-    // Append the progress bar to the progress container
-    progressContainer.appendChild(progressBar);
-
-    // Append the progress container to the document body or any other desired parent element
-    document.body.appendChild(progressContainer);
+    if (document.querySelector(".progress-container")) return;
+    const c = document.createElement("div");
+    c.className = "progress-container fixed top-0 z-30 h-[2px] w-full";
+    c.style.background = "var(--border)";
+    const b = document.createElement("div");
+    b.className = "progress-bar h-full w-0";
+    b.style.background = "var(--accent)";
+    b.id = "myBar";
+    c.appendChild(b);
+    document.body.appendChild(c);
   }
   createProgressBar();
 
-  /** Update the progress bar
-   *  when user scrolls */
   function updateScrollProgress() {
     document.addEventListener("scroll", () => {
       const winScroll =
@@ -195,21 +226,16 @@ const nextPost =
         document.documentElement.scrollHeight -
         document.documentElement.clientHeight;
       const scrolled = (winScroll / height) * 100;
-      if (document) {
-        const myBar = document.getElementById("myBar");
-        if (myBar) {
-          myBar.style.width = scrolled + "%";
-        }
-      }
+      const myBar = document.getElementById("myBar");
+      if (myBar) myBar.style.width = scrolled + "%";
     });
   }
   updateScrollProgress();
 
-  /** Attaches links to headings in the document,
-   *  allowing sharing of sections easily */
+  /* Anchor links on headings */
   function addHeadingLinks() {
     const headings = Array.from(
-      document.querySelectorAll("h2, h3, h4, h5, h6")
+      document.querySelectorAll("article#article h2, article#article h3, article#article h4, article#article h5, article#article h6")
     );
     for (const heading of headings) {
       heading.classList.add("group");
@@ -217,7 +243,6 @@ const nextPost =
       link.className =
         "heading-link ms-2 no-underline opacity-75 md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100";
       link.href = "#" + heading.id;
-
       const span = document.createElement("span");
       span.ariaHidden = "true";
       span.innerText = "#";
@@ -227,33 +252,29 @@ const nextPost =
   }
   addHeadingLinks();
 
-  /** Attaches copy buttons to code blocks in the document,
-   * allowing users to copy code easily. */
+  /* Copy buttons on code blocks */
   function attachCopyButtons() {
-    const copyButtonLabel = "Copy";
-    const codeBlocks = Array.from(document.querySelectorAll("pre"));
-
+    const copyButtonLabel = "copy";
+    const codeBlocks = Array.from(document.querySelectorAll("article#article pre"));
     for (const codeBlock of codeBlocks) {
       const wrapper = document.createElement("div");
       wrapper.style.position = "relative";
 
-      // Check if --file-name-offset custom property exists
       const computedStyle = getComputedStyle(codeBlock);
       const hasFileNameOffset =
         computedStyle.getPropertyValue("--file-name-offset").trim() !== "";
-
-      // Determine the top positioning class
-      const topClass = hasFileNameOffset
-        ? "top-(--file-name-offset)"
-        : "-top-3";
+      const topClass = hasFileNameOffset ? "top-(--file-name-offset)" : "top-2";
 
       const copyButton = document.createElement("button");
-      copyButton.className = `copy-code absolute end-3 ${topClass} rounded bg-muted border border-muted px-2 py-1 text-xs leading-4 text-foreground font-medium`;
+      copyButton.className = `copy-code absolute end-2 ${topClass} px-2 py-0.5 text-[10px] font-mono`;
+      copyButton.style.background = "var(--surface)";
+      copyButton.style.color = "var(--foreground)";
+      copyButton.style.border = "1px solid var(--border)";
+      copyButton.style.borderRadius = "2px";
       copyButton.innerHTML = copyButtonLabel;
       codeBlock.setAttribute("tabindex", "0");
       codeBlock.appendChild(copyButton);
 
-      // wrap codebock with relative parent element
       codeBlock?.parentNode?.insertBefore(wrapper, codeBlock);
       wrapper.appendChild(codeBlock);
 
@@ -265,12 +286,8 @@ const nextPost =
     async function copyCode(block, button) {
       const code = block.querySelector("code");
       const text = code?.innerText;
-
       await navigator.clipboard.writeText(text ?? "");
-
-      // visual feedback that task is completed
-      button.innerText = "Copied";
-
+      button.innerText = "copied";
       setTimeout(() => {
         button.innerText = copyButtonLabel;
       }, 700);
@@ -278,7 +295,6 @@ const nextPost =
   }
   attachCopyButtons();
 
-  /* Go to page start after page swap */
   document.addEventListener("astro:after-swap", () =>
     window.scrollTo({ left: 0, top: 0, behavior: "instant" })
   );

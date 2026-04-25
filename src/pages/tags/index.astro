@@ -1,24 +1,87 @@
 ---
 import { getCollection } from "astro:content";
-import Main from "@/layouts/Main.astro";
 import Layout from "@/layouts/Layout.astro";
-import Tag from "@/components/Tag.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import getUniqueTags from "@/utils/getUniqueTags";
+import getPostsByTag from "@/utils/getPostsByTag";
 import { SITE } from "@/config";
 
-const posts = await getCollection("blog");
+const posts = await getCollection("blog", ({ data }) => !data.draft);
+const baseTags = getUniqueTags(posts);
 
-let tags = getUniqueTags(posts);
+const tagsWithCount = baseTags
+  .map(t => ({
+    ...t,
+    count: getPostsByTag(posts, t.tag).length,
+  }))
+  .sort((a, b) => b.count - a.count);
+
+const max = Math.max(1, ...tagsWithCount.map(t => t.count));
+const totalPosts = tagsWithCount.reduce((s, t) => s + t.count, 0);
 ---
 
 <Layout title={`Tags | ${SITE.title}`}>
   <Header />
-  <Main pageTitle="Tags" pageDesc="All the tags used in posts.">
-    <ul class="flex flex-wrap gap-6">
-      {tags.map(({ tag, tagName }) => <Tag {tag} {tagName} />)}
-    </ul>
-  </Main>
+  <main id="main-content" class="app-layout pt-7 pb-10">
+    <div
+      class="font-mono text-[12.5px]"
+      style="color: color-mix(in srgb, var(--foreground) 70%, transparent);"
+    >
+      <span class="term-prompt">han@ikun126</span><span style="color: var(--muted);"
+        >:~$</span
+      > tree ./tags/ -L 1
+    </div>
+    <h2 class="term-cn text-[28px] font-bold mt-3 mb-1">所有标签</h2>
+    <p
+      class="font-mono text-[12px] mt-1 mb-6"
+      style="color: var(--muted);"
+    >
+      {tagsWithCount.length} tags · {totalPosts} posts total
+    </p>
+
+    <div class="font-mono text-[13px]">
+      {
+        tagsWithCount.map(t => (
+          <a
+            href={`/tags/${t.tag}/`}
+            class="term-card flex items-center gap-3 px-2 py-2 no-underline"
+            transition:name={t.tag}
+          >
+            <span
+              style="width: 140px; flex-shrink: 0; color: var(--accent);"
+              class="truncate"
+            >
+              #{t.tagName}
+            </span>
+            <span
+              class="block h-1.5 flex-1 max-w-[280px] rounded-[1px] overflow-hidden"
+              style="background: var(--surface-2);"
+              aria-hidden="true"
+            >
+              <span
+                class="block h-full"
+                style={`width: ${(t.count / max) * 100}%; background: var(--accent);`}
+              />
+            </span>
+            <span
+              class="text-right"
+              style="width: 36px; opacity: 0.7;"
+            >
+              {String(t.count).padStart(2, "0")}
+            </span>
+            <span
+              class="text-[11px] hidden sm:inline-block"
+              style="width: 50px; opacity: 0.5;"
+            >
+              {totalPosts > 0
+                ? `${((t.count / totalPosts) * 100).toFixed(0)}%`
+                : "—"}
+            </span>
+          </a>
+        ))
+      }
+    </div>
+  </main>
   <Footer />
 </Layout>
