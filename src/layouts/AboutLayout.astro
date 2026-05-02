@@ -17,19 +17,16 @@ const { frontmatter } = Astro.props;
   <Header page="about.md" />
   <main id="main-content" class="app-layout pt-7 pb-10">
     <div
-      class="font-mono text-[12.5px] mb-3"
+      class="mb-3 font-mono text-[12.5px]"
       style="color: color-mix(in srgb, var(--foreground) 70%, transparent);"
     >
-      <span class="term-prompt">han@ikun126</span><span style="color: var(--muted);"
-        >:~$</span
+      <span class="term-prompt">han@ikun126</span><span
+        style="color: var(--muted);">:~$</span
       > cat ~/about.md
     </div>
 
     <!-- Hero card: avatar + handle + motto + socials -->
-    <section
-      class="about-hero"
-      aria-label="profile"
-    >
+    <section class="about-hero" aria-label="profile">
       <div class="about-avatar" aria-hidden="true">
         <span>韩</span>
       </div>
@@ -47,7 +44,9 @@ const { frontmatter } = Astro.props;
             rel="noopener noreferrer"
             class="about-pill"
           >
-            <IconGitHub class="size-4 fill-transparent stroke-current stroke-2" />
+            <IconGitHub
+              class="size-4 fill-transparent stroke-current stroke-2"
+            />
             <span>0xHanniba1</span>
           </a>
           <a
@@ -56,7 +55,9 @@ const { frontmatter } = Astro.props;
             rel="noopener noreferrer"
             class="about-pill"
           >
-            <IconBrandX class="size-4 fill-transparent stroke-current stroke-2" />
+            <IconBrandX
+              class="size-4 fill-transparent stroke-current stroke-2"
+            />
             <span>@0xHanniba1</span>
           </a>
           <a href="/rss.xml" class="about-pill">

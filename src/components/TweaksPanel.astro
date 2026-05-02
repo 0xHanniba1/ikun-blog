@@ -3,20 +3,11 @@
 // Settings persist to localStorage and apply via CSS vars / zoom.
 ---
 
-<button
-  type="button"
-  id="tweaks-trigger"
-  aria-label="Open tweaks"
->
+<button type="button" id="tweaks-trigger" aria-label="Open tweaks">
   <span style="color: var(--accent);">~$</span> tweaks --config
 </button>
 
-<div
-  id="tweaks-panel"
-  role="dialog"
-  aria-label="Tweaks"
-  hidden
->
+<div id="tweaks-panel" role="dialog" aria-label="Tweaks" hidden>
   <!-- fake terminal title bar -->
   <div class="tw-chrome">
     <div class="tw-dots" aria-hidden="true">
@@ -341,16 +332,9 @@
 
 <script>
   type Tweaks = { fs: number; accent: string; accentName: string };
+  type BoundElement = HTMLElement & { __bound?: boolean };
 
   const KEY = "ikun-tweaks";
-  const ACCENTS = [
-    { c: "#25c47b", name: "mint" },
-    { c: "#ff6b35", name: "amber" },
-    { c: "#7a5fff", name: "iris" },
-    { c: "#e84393", name: "rose" },
-    { c: "#3a8eff", name: "azure" },
-    { c: "#d4a017", name: "ochre" },
-  ];
 
   function load(): Tweaks {
     try {
@@ -385,17 +369,19 @@
 
   function bind() {
     const trigger = document.getElementById("tweaks-trigger");
-    const panel = document.getElementById("tweaks-panel");
-    if (!trigger || !panel || (panel as any).__bound) return;
-    (panel as any).__bound = true;
+    const panel = document.getElementById(
+      "tweaks-panel"
+    ) as BoundElement | null;
+    if (!trigger || !panel || panel.__bound) return;
+    panel.__bound = true;
 
     const fs = panel.querySelector<HTMLInputElement>("#tw-fs")!;
     const fsOut = panel.querySelector<HTMLElement>("#tw-fs-out")!;
     const accentName = panel.querySelector<HTMLElement>("#tw-accent-name")!;
-    const accentBtns = panel.querySelectorAll<HTMLButtonElement>(
-      "#tw-accents button"
-    );
-    const themeLight = panel.querySelector<HTMLButtonElement>("#tw-theme-light")!;
+    const accentBtns =
+      panel.querySelectorAll<HTMLButtonElement>("#tw-accents button");
+    const themeLight =
+      panel.querySelector<HTMLButtonElement>("#tw-theme-light")!;
     const themeDark = panel.querySelector<HTMLButtonElement>("#tw-theme-dark")!;
 
     const state = load();

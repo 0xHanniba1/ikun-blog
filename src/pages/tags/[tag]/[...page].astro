@@ -37,24 +37,22 @@ const { page, tagName } = Astro.props;
       class="font-mono text-[12.5px]"
       style="color: color-mix(in srgb, var(--foreground) 70%, transparent);"
     >
-      <span class="term-prompt">han@ikun126</span><span style="color: var(--muted);"
-        >:~$</span
+      <span class="term-prompt">han@ikun126</span><span
+        style="color: var(--muted);">:~$</span
       > grep -l '#{tag}' ./posts/*.md
     </div>
-    <h2 class="term-cn text-[28px] font-bold mt-3 mb-1">
-      <span style="color: var(--muted);" class="font-mono text-[18px] mr-2"
+    <h2 class="mt-3 mb-1 term-cn text-[28px] font-bold">
+      <span style="color: var(--muted);" class="mr-2 font-mono text-[18px]"
         >tag:</span
       >
-      <span transition:name={tag} style="color: var(--accent);">#{tagName}</span>
+      <span transition:name={tag} style="color: var(--accent);">#{tagName}</span
+      >
     </h2>
-    <p
-      class="font-mono text-[12px] mt-1 mb-4"
-      style="color: var(--muted);"
-    >
+    <p class="mt-1 mb-4 font-mono text-[12px]" style="color: var(--muted);">
       {page.total} 篇 · page {page.currentPage} / {page.lastPage}
     </p>
 
-    <ul class="m-0 p-0 list-none">
+    <ul class="m-0 list-none p-0">
       {page.data.map(data => <Card {...data} />)}
     </ul>
   </main>

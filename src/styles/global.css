@@ -20,6 +20,8 @@ html[data-theme="light"] {
   --dot-red: #e06c5b;
   --dot-yellow: #e0b65b;
   --dot-green: #5bb777;
+  --font-cn:
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
 }
 
 html[data-theme="dark"] {
@@ -109,7 +111,7 @@ html[data-theme="dark"] {
    page content. Lives just inside <body>; chrome / nav / main / footer
    sit inside it as full-bleed bands. */
 @utility app-window {
-  @apply mx-auto my-4 sm:my-6 lg:my-8 flex w-full max-w-app flex-1 flex-col overflow-hidden;
+  @apply mx-auto my-4 flex w-full max-w-app flex-1 flex-col overflow-hidden sm:my-6 lg:my-8;
   background: var(--background);
   border: 1px solid var(--border);
   border-radius: 6px;

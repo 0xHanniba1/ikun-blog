@@ -25,18 +25,18 @@ const date = dayjs(modDatetime ?? pubDatetime)
 <li>
   <a
     href={getPath(id, filePath)}
-    class="term-card block px-3 py-4 sm:px-4 no-underline"
+    class="term-card block px-3 py-4 no-underline sm:px-4"
     style="border-top: 1px dashed var(--border);"
   >
     <div class="flex items-baseline gap-3 sm:gap-4">
       <span
-        class="font-mono text-[11px] tabular-nums whitespace-nowrap"
+        class="font-mono text-[11px] whitespace-nowrap tabular-nums"
         style="color: var(--muted); width: 84px; flex-shrink: 0;"
       >
         {date}
       </span>
       <Heading
-        class="term-cn term-card-title text-[15px] sm:text-[17px] font-semibold leading-snug m-0 flex-1"
+        class="term-card-title m-0 flex-1 term-cn text-[15px] leading-snug font-semibold sm:text-[17px]"
         style={{ viewTransitionName: slugifyStr(title.replaceAll(".", "-")) }}
       >
         {title}
@@ -45,7 +45,7 @@ const date = dayjs(modDatetime ?? pubDatetime)
     {
       description && (
         <p
-          class="term-cn text-[13px] sm:text-sm leading-[1.7] mt-2 mb-2 ps-0 sm:ps-[100px]"
+          class="mt-2 mb-2 ps-0 term-cn text-[13px] leading-[1.7] sm:ps-[100px] sm:text-sm"
           style="color: color-mix(in srgb, var(--foreground) 75%, transparent);"
         >
           {description}
@@ -55,7 +55,7 @@ const date = dayjs(modDatetime ?? pubDatetime)
     {
       tags && tags.length > 0 && (
         <div
-          class="font-mono text-[11px] flex flex-wrap gap-1.5 ps-0 sm:ps-[100px]"
+          class="flex flex-wrap gap-1.5 ps-0 font-mono text-[11px] sm:ps-[100px]"
           style="color: var(--muted);"
         >
           {tags.map(t => (

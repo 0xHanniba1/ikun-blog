@@ -10,12 +10,9 @@ type Props = {
 const { noMarginTop = false, class: className, ...attrs } = Astro.props;
 ---
 
-<footer
-  class:list={[{ "mt-auto": !noMarginTop }, className]}
-  {...attrs}
->
+<footer class:list={[{ "mt-auto": !noMarginTop }, className]} {...attrs}>
   <div
-    class="flex items-center justify-between py-3.5 px-4 sm:px-5 text-[12px]"
+    class="flex items-center justify-between px-4 py-3.5 text-[12px] sm:px-5"
     style="color: var(--muted); border-top: 1px dashed var(--border);"
   >
     <span>// © {currentYear} 韩老魔. MIT-ish.</span>

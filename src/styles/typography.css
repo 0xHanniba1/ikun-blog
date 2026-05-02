@@ -66,11 +66,7 @@
     a {
       color: inherit;
       text-decoration: underline;
-      text-decoration-color: color-mix(
-        in srgb,
-        var(--accent) 55%,
-        transparent
-      );
+      text-decoration-color: color-mix(in srgb, var(--accent) 55%, transparent);
       text-decoration-style: solid;
       text-underline-offset: 3px;
       transition: color 0.12s;

@@ -27,11 +27,11 @@ const total = allPosts.length;
       class="font-mono text-[12.5px]"
       style="color: color-mix(in srgb, var(--foreground) 70%, transparent);"
     >
-      <span class="term-prompt">han@ikun126</span><span style="color: var(--muted);"
-        >:~$</span
+      <span class="term-prompt">han@ikun126</span><span
+        style="color: var(--muted);">:~$</span
       > ls -lat ./posts/ | head -n {SITE.postPerPage}
     </div>
-    <h2 class="term-cn text-[28px] font-bold mt-3 mb-1">
+    <h2 class="mt-3 mb-1 term-cn text-[28px] font-bold">
       所有文章
       <span
         class="font-mono text-[14px] font-normal"
@@ -40,14 +40,11 @@ const total = allPosts.length;
         ({total} 篇)
       </span>
     </h2>
-    <p
-      class="font-mono text-[12px] mt-1 mb-4"
-      style="color: var(--muted);"
-    >
+    <p class="mt-1 mb-4 font-mono text-[12px]" style="color: var(--muted);">
       // page {page.currentPage} / {page.lastPage}
     </p>
 
-    <ul class="m-0 p-0 list-none">
+    <ul class="m-0 list-none p-0">
       {page.data.map(data => <Card {...data} />)}
     </ul>
   </main>

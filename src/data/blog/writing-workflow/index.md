@@ -56,7 +56,7 @@ featured: false
 
 - **不要**在 md 里写 `# 一级标题`，那是 frontmatter 自动生成的
 - 章节用 `## `（h2），子章节用 `### `
-- 代码块用三反引号 + 语言标识：`` ```bash ``、`` ```ts `` 之类
+- 代码块用三反引号围栏，并加语言标识，例如 bash、ts
 - 图片用相对路径 `![](./image-xxx.png)`
 
 Typora 偏好设置里要打开两个选项，否则截图粘贴不会自动落到当前文件夹：
@@ -102,15 +102,15 @@ Cloudflare Pages 监听 `main` 分支，push 后自动构建上线，约 1-2 分
 
 ## Cheatsheet
 
-| 操作 | 命令 |
-|---|---|
-| 新建文章 | `mkdir src/data/blog/foo && touch src/data/blog/foo/index.md` |
-| 本地预览 | `npm run dev` |
-| 构建检查 | `npm run build` |
-| 部署 | `git add -A && git commit -m "post: foo" && git push` |
-| 切深浅 | 顶栏右上 `[◑ light]` / `[◐ dark]` |
-| 调字号 / 主色 | 右下角 `~$ tweaks --config` |
-| 搜索 | ⌘K / Ctrl+K |
+| 操作          | 命令                                                          |
+| ------------- | ------------------------------------------------------------- |
+| 新建文章      | `mkdir src/data/blog/foo && touch src/data/blog/foo/index.md` |
+| 本地预览      | `npm run dev`                                                 |
+| 构建检查      | `npm run build`                                               |
+| 部署          | `git add -A && git commit -m "post: foo" && git push`         |
+| 切深浅        | 顶栏右上 `[◑ light]` / `[◐ dark]`                             |
+| 调字号 / 主色 | 右下角 `~$ tweaks --config`                                   |
+| 搜索          | ⌘K / Ctrl+K                                                   |
 
 ## 一点感想
 

@@ -58,7 +58,7 @@ const page =
             : "shell");
 
 // Map social name -> icon component
-const ICON_BY_NAME: Record<string, any> = {
+const ICON_BY_NAME: Record<string, typeof IconGitHub | undefined> = {
   GitHub: IconGitHub,
   X: IconBrandX,
 };
@@ -74,38 +74,38 @@ const ICON_BY_NAME: Record<string, any> = {
 
 <!-- Window chrome (mac traffic lights + zsh title bar) -->
 <div
-  class="flex items-center gap-3 py-2.5 px-4 sm:px-5"
+  class="flex items-center gap-3 px-4 py-2.5 sm:px-5"
   style="background: var(--surface); border-bottom: 1px solid var(--border);"
 >
-    <div class="mac-dots flex gap-2" aria-hidden="true">
-      <span class="mac-dot mac-dot-red"></span>
-      <span class="mac-dot mac-dot-yellow"></span>
-      <span class="mac-dot mac-dot-green"></span>
-    </div>
-    <div
-      class="flex-1 text-center text-[11px] truncate"
-      style="color: var(--muted);"
-    >
-      ~/{host} — {page} — zsh
-    </div>
-    <button
-      id="theme-btn"
-      class="text-[11px] cursor-pointer hover:text-accent transition-colors"
-      style="color: var(--muted);"
-      title="Toggle light / dark"
-      aria-label="auto"
-      aria-live="polite"
-    >
-      <span class="theme-light-label">[◑ light]</span>
-      <span class="theme-dark-label">[◐ dark]</span>
-    </button>
+  <div class="mac-dots flex gap-2" aria-hidden="true">
+    <span class="mac-dot mac-dot-red"></span>
+    <span class="mac-dot mac-dot-yellow"></span>
+    <span class="mac-dot mac-dot-green"></span>
+  </div>
+  <div
+    class="flex-1 truncate text-center text-[11px]"
+    style="color: var(--muted);"
+  >
+    ~/{host} — {page} — zsh
+  </div>
+  <button
+    id="theme-btn"
+    class="cursor-pointer text-[11px] transition-colors hover:text-accent"
+    style="color: var(--muted);"
+    title="Toggle light / dark"
+    aria-label="auto"
+    aria-live="polite"
+  >
+    <span class="theme-light-label">[◑ light]</span>
+    <span class="theme-dark-label">[◐ dark]</span>
+  </button>
 </div>
 
 <!-- Terminal-style nav -->
 <header>
   <nav
     id="nav-menu"
-    class="flex flex-wrap items-center gap-x-5 gap-y-2 py-3.5 px-4 sm:px-5 text-[13px]"
+    class="flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3.5 text-[13px] sm:px-5"
     style="border-bottom: 1px dashed var(--border);"
   >
     <a
@@ -125,7 +125,9 @@ const ICON_BY_NAME: Record<string, any> = {
         return (
           <a
             href={item.href}
-            class:list={["whitespace-nowrap transition-colors hover:text-accent"]}
+            class:list={[
+              "whitespace-nowrap transition-colors hover:text-accent",
+            ]}
             style={
               isActive
                 ? "color: var(--accent); font-weight: 600;"
@@ -167,7 +169,9 @@ const ICON_BY_NAME: Record<string, any> = {
             stroke-width="1.4"
             stroke-linecap="round"></path>
         </svg>
-        <span style="opacity: 0.6; flex: 1; text-align: left;">search posts...</span>
+        <span style="opacity: 0.6; flex: 1; text-align: left;"
+          >search posts...</span
+        >
         <kbd
           class="hidden sm:inline-block"
           style="font-size: 9.5px; padding: 1px 5px; border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent); border-radius: 2px; opacity: 0.7; font-family: var(--font-mono);"
@@ -236,7 +240,8 @@ const ICON_BY_NAME: Record<string, any> = {
     btn.dataset.bound = "1";
     btn.addEventListener("click", () => {
       const html = document.documentElement;
-      const next = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      const next =
+        html.getAttribute("data-theme") === "dark" ? "light" : "dark";
       html.setAttribute("data-theme", next);
       try {
         localStorage.setItem("theme", next);

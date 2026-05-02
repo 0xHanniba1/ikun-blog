@@ -17,7 +17,7 @@ const end = Math.min(cur * page.size, page.total);
 {
   page.lastPage > 1 && (
     <nav
-      class="app-layout flex items-center gap-2 py-5 text-[12px] flex-wrap"
+      class="flex app-layout flex-wrap items-center gap-2 py-5 text-[12px]"
       style="border-top: 1px dashed var(--border); color: var(--muted);"
       role="navigation"
       aria-label="Pagination Navigation"
@@ -28,7 +28,10 @@ const end = Math.min(cur * page.size, page.total);
       <span class="flex-1" />
       <a
         href={page.url.prev ?? "#"}
-        class:list={["term-btn no-underline", { "opacity-40 pointer-events-none": !page.url.prev }]}
+        class:list={[
+          "term-btn no-underline",
+          { "pointer-events-none opacity-40": !page.url.prev },
+        ]}
         aria-disabled={!page.url.prev}
         aria-label="Previous page"
       >
@@ -50,7 +53,10 @@ const end = Math.min(cur * page.size, page.total);
       })}
       <a
         href={page.url.next ?? "#"}
-        class:list={["term-btn no-underline", { "opacity-40 pointer-events-none": !page.url.next }]}
+        class:list={[
+          "term-btn no-underline",
+          { "pointer-events-none opacity-40": !page.url.next },
+        ]}
         aria-disabled={!page.url.next}
         aria-label="Next page"
       >

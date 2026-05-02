@@ -52,12 +52,7 @@ const indexJson = JSON.stringify({ posts: indexPosts, tags });
 
   <div class="cmdk-overlay" data-cmdk-overlay></div>
 
-  <div
-    role="dialog"
-    aria-modal="true"
-    aria-label="Search"
-    class="cmdk-shell"
-  >
+  <div role="dialog" aria-modal="true" aria-label="Search" class="cmdk-shell">
     <!-- chrome -->
     <div class="cmdk-chrome">
       <span class="cmdk-dots" aria-hidden="true">
@@ -395,6 +390,7 @@ const indexJson = JSON.stringify({ posts: indexPosts, tags });
     href: string;
     render: () => HTMLElement;
   };
+  type BoundElement = HTMLElement & { __bound?: boolean };
 
   const RECENT_KEY = "ikun-cmdk-recent";
 
@@ -436,9 +432,9 @@ const indexJson = JSON.stringify({ posts: indexPosts, tags });
   }
 
   function init() {
-    const root = document.getElementById("cmdk-root");
-    if (!root || (root as any).__bound) return;
-    (root as any).__bound = true;
+    const root = document.getElementById("cmdk-root") as BoundElement | null;
+    if (!root || root.__bound) return;
+    root.__bound = true;
 
     const indexEl = document.getElementById("cmdk-index");
     let index: { posts: SearchPost[]; tags: SearchTag[] } = {
@@ -457,7 +453,12 @@ const indexJson = JSON.stringify({ posts: indexPosts, tags });
     let rows: CmdkRow[] = [];
     let sel = 0;
 
-    const QUICK_ACTIONS: { icon: string; label: string; hint: string; action: () => void }[] = [
+    const QUICK_ACTIONS: {
+      icon: string;
+      label: string;
+      hint: string;
+      action: () => void;
+    }[] = [
       {
         icon: "↗",
         label: "查看所有文章",
@@ -715,8 +716,7 @@ const indexJson = JSON.stringify({ posts: indexPosts, tags });
         el.classList.toggle("is-sel", i === sel);
         const ic = el.querySelector<HTMLElement>('[data-icon="1"]');
         if (ic) ic.textContent = i === sel ? "▸" : " ";
-        if (i === sel)
-          el.scrollIntoView({ block: "nearest", behavior: "instant" as any });
+        if (i === sel) el.scrollIntoView({ block: "nearest" });
       });
     }
 

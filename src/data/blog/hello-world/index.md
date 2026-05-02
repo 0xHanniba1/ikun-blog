@@ -11,14 +11,14 @@ featured: true
 
 ## 这个站怎么搭的
 
-| 组件 | 选型 |
-|---|---|
-| 框架 | [Astro](https://astro.build/) v5 |
-| 主题 | [AstroPaper](https://github.com/satnaing/astro-paper) |
-| 部署 | Cloudflare Pages |
-| 域名 | Cloudflare 注册 |
-| 内容 | Markdown |
-| 评论 / 统计 | 暂未接入 |
+| 组件        | 选型                                                  |
+| ----------- | ----------------------------------------------------- |
+| 框架        | [Astro](https://astro.build/) v5                      |
+| 主题        | [AstroPaper](https://github.com/satnaing/astro-paper) |
+| 部署        | Cloudflare Pages                                      |
+| 域名        | Cloudflare 注册                                       |
+| 内容        | Markdown                                              |
+| 评论 / 统计 | 暂未接入                                              |
 
 整套加起来 **0 服务器成本**，只花了一个域名的钱。后面会单独写一篇详细的搭建过程。
 

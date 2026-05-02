@@ -26,9 +26,8 @@ export function getPath(
   const basePath = includeBase ? "/posts" : "";
 
   const blogIdParts = id.split("/");
-  const lastSegment = blogIdParts.length > 0
-    ? blogIdParts[blogIdParts.length - 1]
-    : id;
+  const lastSegment =
+    blogIdParts.length > 0 ? blogIdParts[blogIdParts.length - 1] : id;
 
   // Treat `index` as a folder marker, not a path segment.
   const slug = lastSegment === "index" ? "" : lastSegment;

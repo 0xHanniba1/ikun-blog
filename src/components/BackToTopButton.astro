@@ -1,5 +1,4 @@
 ---
-import IconChevronLeft from "@/assets/icons/IconChevronLeft.svg";
 import IconArrowNarrowUp from "@/assets/icons/IconArrowNarrowUp.svg";
 ---
 
@@ -44,7 +43,8 @@ import IconArrowNarrowUp from "@/assets/icons/IconArrowNarrowUp.svg";
     function handleScroll() {
       const scrollTotal = main.scrollHeight - main.clientHeight;
       const scrollTop = main.scrollTop;
-      const scrollPercent = scrollTotal > 0 ? Math.floor((scrollTop / scrollTotal) * 100) : 0;
+      const scrollPercent =
+        scrollTotal > 0 ? Math.floor((scrollTop / scrollTotal) * 100) : 0;
 
       progressIndicator.style.setProperty(
         "background-image",

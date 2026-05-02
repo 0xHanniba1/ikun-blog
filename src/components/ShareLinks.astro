@@ -6,7 +6,7 @@ const URL = Astro.url;
 
 {
   SHARE_LINKS.length > 0 && (
-    <div class="font-mono text-[12px] flex items-center gap-3 flex-wrap">
+    <div class="flex flex-wrap items-center gap-3 font-mono text-[12px]">
       <span style="color: var(--muted);">// share:</span>
       <div class="flex flex-wrap items-center gap-2">
         {SHARE_LINKS.map(social => (
