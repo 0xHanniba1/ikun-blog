@@ -1,67 +1,79 @@
 ---
-title: "用 CC Switch 给 Claude Code 换模型"
+title: "用 CC Switch，把 Claude Code 的模型变成可替换零件"
 pubDatetime: 2026-05-02T20:47:00+08:00
-description: "Claude Code 入口不变，靠 CC Switch 在图形界面切供应商，再加一份 CLAUDE.md 把规则压平。"
+description: "Claude Code 入口不变，借 CC Switch 把后端模型切成可替换零件。"
 tags:
   - ai-agent
   - tooling
 featured: false
 ---
 
-在终端运行 `claude --dangerously-skip-permissions` 启动 Claude Code，启动页左下角会显示当前调用的模型。启用 DeepSeek 时是 `deepseek-v4-pro · API Usage Billing`，切到 MiniMax 后新开的进程显示 `MiniMax-M2.7`。入口没变，模型按任务切。
+Claude Code 的入口可以不变。
 
-Claude Code 仍按 Anthropic 协议发请求，其他厂商提供兼容接口就能接进来。以前换一次后端要改环境变量、改 `settings.json`、重启终端；CC Switch 把这套收进图形界面：选供应商，点启用。
+变的是后面的模型。
+
+只要供应商提供 Anthropic 兼容接口，Claude Code 仍按原来的协议发请求，后端就可以从 Claude 切到 DeepSeek，也可以再切到 MiniMax。过去这件事要改环境变量、改 `settings.json`、重启终端。CC Switch 把这层路由收进了图形界面：选供应商，点启用，新开一个 Claude Code。
+
+这篇只解决一个问题：怎么用 CC Switch 让 Claude Code 在不同模型之间切换，并且让协作规则不因为换模型而失控。
 
 ![三层架构总览：Claude Code 终端工具 · CC Switch 路由 · 模型供应商](./01-framework-three-layer-architecture.png)
 
-## 装 Claude Code
+## 先装 Claude Code
 
-新装优先走 native installer。这是官方安装脚本，路径、权限、自动更新它自己管。npm 装也能跑，但要先有 Node.js，遇到全局包冲突、Node 版本不对、权限不够时容易折腾。除非你已经习惯 npm 管版本，否则不用走这条路。
+新机器优先用 native installer。
 
-native installer 会自动更新，最省事：
+它是官方安装脚本，路径、权限、自动更新都自己处理。npm 方式也能用，但要先有 Node.js，还可能遇到全局包冲突、Node 版本不对、权限不够这些问题。除非你已经习惯用 npm 管命令行工具，否则没必要走这条路。
+
+Mac / Linux / WSL：
 
 ```bash
-# Mac / Linux / WSL
 curl -fsSL https://claude.ai/install.sh | bash
 ```
 
+Windows PowerShell：
+
 ```powershell
-# Windows PowerShell
 irm https://claude.ai/install.ps1 | iex
 ```
 
-已经装了 Homebrew（Mac）或 WinGet（Windows）的，可以用包管理器装：
+已经在用包管理器，也可以这样装。
+
+Mac：
 
 ```bash
-# Mac
 brew install --cask claude-code
 ```
 
+Windows：
+
 ```powershell
-# Windows
 winget install Anthropic.ClaudeCode
 ```
 
-npm 方式还能用：
+npm 方式仍然可用：
 
 ```bash
 npm install -g @anthropic-ai/claude-code
 ```
 
-装完检查一下：
+装完先查两件事：
 
 ```bash
 claude --version
 claude doctor
 ```
 
-`claude --version` 看版本号，`claude doctor` 看是用哪种方式装的、装到了哪里。Windows 上跑 Claude Code 要先装 Git for Windows，因为它会带上 Bash，没有 Bash 一些工具命令会调不动。
+`claude --version` 看版本号。`claude doctor` 看安装方式、安装路径和环境状态。
+
+Windows 上还要先装 Git for Windows。Claude Code 依赖 Bash，一些工具命令没有 Bash 会调不动。
 
 ![三种安装方式对比：native installer / brew·winget / npm](./02-infographic-install-methods.png)
 
-## 装 CC Switch
+## 再装 CC Switch
 
-[CC Switch](https://github.com/farion1231/cc-switch) 是 farion1231 做的开源项目，跨平台桌面应用，用来集中管理 AI 命令行工具背后用哪家供应商。这里只讲 Claude Code 这一种用法。
+[CC Switch](https://github.com/farion1231/cc-switch) 是 farion1231 做的开源桌面应用，用来集中管理 AI 命令行工具背后的模型供应商。它不是替代 Claude Code，而是站在 Claude Code 和模型供应商之间，负责切路由。
+
+这里只讲 Claude Code 这一种用法。
 
 Mac 用 Homebrew tap：
 
@@ -70,53 +82,67 @@ brew tap farion1231/ccswitch
 brew install --cask cc-switch
 ```
 
-Windows 去仓库 Releases 下载。`CC-Switch-v{version}-Windows.msi` 是带安装器的版本，`CC-Switch-v{version}-Windows-Portable.zip` 是免安装版，解压就能跑。
+Windows 去仓库 Releases 下载。`CC-Switch-v{version}-Windows.msi` 是安装版，`CC-Switch-v{version}-Windows-Portable.zip` 是免安装版，解压就能跑。
 
 Linux 直接下载对应包：Debian / Ubuntu 选 `.deb`，Fedora / RHEL / openSUSE 选 `.rpm`，其他发行版优先试 `.AppImage`。
 
-Mac 版目前已经做过 Apple 的签名和公证，正常情况下双击就能打开。如果系统还是弹拦截窗口，按 Releases 或 README 里的最新说明处理。
+Mac 版目前已经做过 Apple 签名和公证，正常情况下双击就能打开。如果系统仍然拦截，按 Releases 或 README 里的最新说明处理。
 
-## 走通 DeepSeek
+## 先跑通 DeepSeek
 
-打开 CC Switch 主界面，点右上角橙色 `+` 进入添加流程。预设列表里选 DeepSeek，名称、官网、请求地址会自动填好。
+打开 CC Switch，点右上角橙色 `+`。预设列表里选 DeepSeek。名称、官网、请求地址会自动填好。
 
-唯一必须手动填的是 API Key，去 DeepSeek 官网控制台申请一个粘进来。下面的认证方式、API 格式、请求地址这些字段先别动，照预设来跑通最稳。
+你唯一必须手动填的是 API Key。去 DeepSeek 官网控制台申请一个，粘进来。
 
-请求地址默认是：
+认证方式、API 格式、请求地址这些字段先别动。第一次配置，按预设跑通最稳。
+
+DeepSeek 的 Anthropic 协议入口默认是：
 
 ```text
 https://api.deepseek.com/anthropic
 ```
 
-这个地址结尾不带斜杠，是 DeepSeek 留给 Anthropic 协议的入口。Claude Code 把请求按 Anthropic 的格式发到这里，DeepSeek 收到后处理，再按同样格式返回。
+注意结尾没有斜杠。
 
-模型映射有四个槽位：主模型 / Sonnet 默认 / Haiku 默认 / Opus 默认。如果目标是 DeepSeek V4 Pro，把四个槽位都填成：
+Claude Code 会把请求按 Anthropic 的格式发到这个地址。DeepSeek 接住请求，处理后再按兼容格式返回。对 Claude Code 来说，请求协议没有变；变的是后端模型。
+
+接着看模型映射。
+
+CC Switch 里有四个槽位：主模型 / Sonnet 默认 / Haiku 默认 / Opus 默认。如果你的目标是 DeepSeek V4 Pro，把四个槽位都填成：
 
 ```text
 deepseek-v4-pro
 ```
 
-Claude Code 在不同场景会请求不同的 Anthropic 模型名，平时用 Sonnet，重任务可能切 Opus。四个槽位都填同一个 model id，万一某次请求没打到主模型，也不会跑到旧版本或默认版本上去。
+为什么四个都填？
 
-如果以后 DeepSeek 改了模型名，以 DeepSeek API 文档里的 model id 为准，不要按网页上的展示名或营销名填。
+因为 Claude Code 在不同场景下可能请求不同的 Anthropic 模型名。平时可能走 Sonnet，重任务可能走 Opus。四个槽位都填同一个 model id，可以避免某次请求没有打到主模型，结果又落回旧版本或默认版本。
 
-填完右下角点 `+ 添加`。
+如果 DeepSeek 以后改了模型名，以 DeepSeek API 文档里的 model id 为准。不要按网页展示名或营销名填。
+
+填完点右下角 `+ 添加`。
 
 ![CC Switch 添加 DeepSeek 的配置面板示意：API Key、请求地址、四个模型槽位都填 deepseek-v4-pro](./03-infographic-ccswitch-config-panel.png)
 
-## 启用、验证、切到 MiniMax
+## 启用后，用新终端验证
 
-回到主界面，鼠标悬停在目标供应商那一行上，右侧会出现一排操作按钮。蓝色 `启用` 就是切换键。
+回到 CC Switch 主界面。
 
-切完后开个新终端窗口跑：
+鼠标悬停在目标供应商那一行，右侧会出现操作按钮。蓝色 `启用` 就是切换键。
+
+切完后，新开一个终端窗口，启动 Claude Code：
 
 ```bash
 claude --dangerously-skip-permissions
 ```
 
-想确认有没有切成功，最稳的方式是看终端启动栏显示的模型名，再对一下 CC Switch 里当前启用的供应商。直接问模型「你是什么模型」只能当辅助，因为模型的自我介绍会被系统提示词或路由配置影响，未必准。
+这个参数会跳过权限确认，只建议在你明确接受风险的本地环境使用。如果只是验证模型切换，也可以用你平时启动 Claude Code 的方式。
 
-DeepSeek 配通后，banner 会从默认模型变成类似：
+判断有没有切成功，最稳的方式不是问模型“你是谁”。
+
+模型自我介绍会受系统提示词、路由配置、模型对齐策略影响，不一定准。直接看启动栏里的模型名，再对照 CC Switch 当前启用的供应商。
+
+DeepSeek 配通后，启动栏会从默认模型变成类似：
 
 ```text
 deepseek-v4-pro · API Usage Billing
@@ -124,7 +150,13 @@ deepseek-v4-pro · API Usage Billing
 
 ![启用 → 新开终端 → 看 banner → 切 MiniMax 的循环流程](./04-flowchart-enable-verify-switch.png)
 
-换 MiniMax 走一样的流程：添加 MiniMax 这个供应商，填 API Key，启用，新开一个 Claude Code 窗口。MiniMax 给 Anthropic 协议留的入口地址是：
+## 再加一个 MiniMax
+
+MiniMax 的流程一样。
+
+添加 MiniMax 供应商，填 API Key，启用，然后新开 Claude Code 窗口。
+
+MiniMax 的 Anthropic 协议入口是：
 
 ```text
 https://api.minimax.io/anthropic
@@ -136,13 +168,25 @@ https://api.minimax.io/anthropic
 MiniMax-M2.7
 ```
 
-切换只对新启动的 Claude Code 生效。已经在跑的窗口还是用原来的模型，不会中途换。想彻底切干净，先退出当前的 Claude Code，再重新启动。
+这里有一个容易误判的点：切换只对新启动的 Claude Code 生效。
 
-## 还差一份 CLAUDE.md
+已经跑起来的窗口，还是用原来的模型，不会中途变。想切干净，就退出当前 Claude Code，再重新启动。
 
-换模型，换的是模型本身这一层。同一段指令给 DeepSeek 和 MiniMax，回答风格、操作节奏、引用文件路径的方式、对权限的把握都可能不一样。要把这些差异压平，靠 CLAUDE.md 比换模型更管用。
+## 真正稳定体验的，是 CLAUDE.md
 
-CLAUDE.md 是 Claude Code 启动时会自动读进去的规则文件。我自己的全局 CLAUDE.md 放在 `~/.claude/CLAUDE.md`，里面只有几条不会变的硬规则：
+换模型，只是换了推理引擎。
+
+但同一段任务交给 DeepSeek 和 MiniMax，回答风格、操作节奏、引用文件路径的方式、权限边界都可能不一样。要把这些差异压平，靠的不是继续换模型，而是把协作规则写死。
+
+这个文件就是 `CLAUDE.md`。
+
+Claude Code 启动时会自动读取它。我自己的全局规则放在：
+
+```text
+~/.claude/CLAUDE.md
+```
+
+里面只放不会变的硬规则：
 
 ```markdown
 ## 总原则
@@ -166,12 +210,32 @@ CLAUDE.md 是 Claude Code 启动时会自动读进去的规则文件。我自己
 - 创建 commit，除非我明确要求
 ```
 
-这几条比模型选择更重要。不准编路径、动手前看 git status、不可逆操作必须先问，这些规则写死之后，模型怎么换都按同一套约束跑。
+这几条比模型选择更重要。
 
-`~/.claude/CLAUDE.md` 是全局文件，对你机器上所有项目都生效。具体项目的根目录里再放一份 `CLAUDE.md`，写这个项目特有的规则，比如架构怎么组织、变量怎么命名、测试怎么跑。两层叠加之后，模型可以换，工作流不用重学。
+不准编路径。动手前看 `git status`。不可逆操作必须先问。规则写死之后，模型可以换，工作流不用跟着重学。
+
+`~/.claude/CLAUDE.md` 是全局文件，对这台机器上的所有项目生效。具体项目根目录里还可以再放一份 `CLAUDE.md`，写项目特有规则，比如架构怎么组织、变量怎么命名、测试怎么跑。
+
+全局规则管底线。项目规则管上下文。两层叠加，模型才会像同一个助手。
 
 ![CLAUDE.md 双层叠加：全局硬规则 + 项目特有规则 = 模型可换、规则不变](./05-framework-claudemd-layered-rules.png)
 
+## 几个容易踩坑的地方
+
+第一，切换后一定要新开 Claude Code。旧窗口不会自动换模型。
+
+第二，模型名填 API 文档里的 model id，不要填网页展示名。
+
+第三，不要用“你是什么模型”当唯一验证方式。看启动栏和 CC Switch 当前启用项更可靠。
+
+第四，先跑通预设，再改高级字段。认证方式、API 格式、请求地址这些配置，一开始越少动越好。
+
+第五，换模型不等于换工作流。没有 `CLAUDE.md`，每个模型都会带着自己的习惯做事。
+
 ## 收尾
 
-Claude Code 提供工具入口，CC Switch 决定调用哪家模型，CLAUDE.md 把协作规则写死。以后新模型出来，要改的就是供应商配置和 model id 两个字段，模型本身已经是可以随时替换的零件。
+这套方案的关键不是“把 Claude Code 换成某个模型”。
+
+关键是把模型从固定后端变成可替换零件。
+
+Claude Code 负责终端入口，CC Switch 负责供应商路由，`CLAUDE.md` 负责协作规则。以后新模型出来，要改的通常只是供应商配置和 model id。工具入口不变，规则不变，后端按任务换。
