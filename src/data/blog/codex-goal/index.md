@@ -1,5 +1,5 @@
 ---
-title: "Codex 实验性 `/goal` 功能拆解：它解决的是持续推进，不是需求定义"
+title: "Codex /goal：持续推进，而非定义需求"
 pubDatetime: 2026-05-05T00:35:00+08:00
 description: "Codex /goal 适合持续推进清晰目标，不适合替代需求定义。"
 tags:
