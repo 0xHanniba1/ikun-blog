@@ -1,0 +1,7 @@
+# Legacy doubled post URLs (/posts/<slug>/<slug>) → canonical single-segment.
+# These existed before the getPath fix; 301 so old/indexed links don't 404.
+/posts/cc-switch-guide/cc-switch-guide                     /posts/cc-switch-guide                     301
+/posts/codex-goal/codex-goal                               /posts/codex-goal                          301
+/posts/hello-world/hello-world                             /posts/hello-world                         301
+/posts/writing-workflow/writing-workflow                   /posts/writing-workflow                    301
+/posts/playwright-python-migration/playwright-python-migration   /posts/playwright-python-migration   301
