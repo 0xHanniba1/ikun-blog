@@ -1,14 +1,13 @@
 ---
-import { execSync } from "node:child_process";
 import { getCollection } from "astro:content";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import blogStats from "@/generated/blog-stats.json";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import getSortedPosts from "@/utils/getSortedPosts";
-import getUniqueTags from "@/utils/getUniqueTags";
 import { getPath } from "@/utils/getPath";
 import { SITE } from "@/config";
 import IconGitHub from "@/assets/icons/IconGitHub.svg";
@@ -20,78 +19,27 @@ dayjs.extend(timezone);
 
 const posts = await getCollection("blog");
 const sortedPosts = getSortedPosts(posts);
-const tags = getUniqueTags(posts);
-
-const totalPosts = sortedPosts.length;
-const totalTags = tags.length;
-
-// ── Words & reading time (markdown body) ───────────────────────────
-function countBody(md: string): { words: number; minutes: number } {
-  const cleaned = md
-    .replace(/```[\s\S]*?```/g, " ")
-    .replace(/`[^`]*`/g, " ")
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
-    .replace(/[#>*_~`>\-]/g, " ");
-  const cjk = (cleaned.match(/[一-鿿]/g) || []).length;
-  const eng = (cleaned.match(/[A-Za-z][A-Za-z'-]*/g) || []).length;
-  return { words: cjk + eng, minutes: cjk / 300 + eng / 200 };
-}
-
-let totalWords = 0;
-let totalMinutes = 0;
-for (const p of sortedPosts) {
-  const body = (p as unknown as { body?: string }).body ?? "";
-  const { words, minutes } = countBody(body);
-  totalWords += words;
-  totalMinutes += minutes;
-}
 const wordsStr =
-  totalWords >= 1000
-    ? `${(totalWords / 1000).toFixed(1)}k`
-    : String(totalWords);
+  blogStats.totalWords >= 1000
+    ? `${(blogStats.totalWords / 1000).toFixed(1)}k`
+    : String(blogStats.totalWords);
 const readingHint =
-  totalMinutes >= 60
-    ? `约 ${(totalMinutes / 60).toFixed(1)} 小时阅读`
-    : `约 ${Math.max(1, Math.round(totalMinutes))} 分钟阅读`;
-
-// ── Git stats (build-time) ─────────────────────────────────────────
-function safeGit(cmd: string): string {
-  try {
-    return execSync(`git ${cmd}`, { encoding: "utf8" }).trim();
-  } catch {
-    return "";
-  }
-}
-const totalCommitsRaw = safeGit("rev-list --count HEAD");
-const totalCommitsNum = parseInt(totalCommitsRaw || "0", 10);
-const totalCommitsStr =
-  totalCommitsNum > 0 ? totalCommitsNum.toLocaleString("en-US") : "—";
-const recent7Raw = safeGit('log --since="7 days ago" --oneline');
-const recent7 = recent7Raw ? recent7Raw.split("\n").filter(Boolean).length : 0;
-
-// ── "Since" — earliest post date ──────────────────────────────────
-const earliest = sortedPosts.length
-  ? dayjs(
-      sortedPosts.reduce<Date>(
-        (min, p) => (p.data.pubDatetime < min ? p.data.pubDatetime : min),
-        sortedPosts[0]!.data.pubDatetime
-      )
-    )
-  : dayjs();
-const sinceStr = earliest.format("YYYY-MM-DD");
-const today = dayjs().tz(SITE.timezone);
-const ageDays = today.diff(earliest, "day");
-const ageYears = Math.floor(ageDays / 365);
-const ageRest = ageDays - ageYears * 365;
-const uptimeStr = ageYears > 0 ? `${ageYears}y ${ageRest}d` : `${ageDays}d`;
+  blogStats.readingMinutes >= 60
+    ? `约 ${(blogStats.readingMinutes / 60).toFixed(1)} 小时阅读`
+    : `约 ${Math.max(1, Math.round(blogStats.readingMinutes))} 分钟阅读`;
+const uptimeYears = Math.floor(blogStats.uptimeDays / 365);
+const uptimeRestDays = blogStats.uptimeDays - uptimeYears * 365;
+const uptimeStr =
+  uptimeYears > 0
+    ? `${uptimeYears}y ${uptimeRestDays}d`
+    : `${blogStats.uptimeDays}d`;
 
 const stats = [
   {
     cmd: "wc -l ./posts/*.md",
-    value: String(totalPosts),
+    value: String(blogStats.totalPosts),
     unit: "posts",
-    hint: `/ ${totalTags} 个标签`,
+    hint: `/ ${blogStats.totalTags} 个标签`,
   },
   {
     cmd: "cat ./posts/*.md | wc -w",
@@ -100,21 +48,21 @@ const stats = [
     hint: readingHint,
   },
   {
-    cmd: "git log --oneline | wc -l",
-    value: totalCommitsStr,
-    unit: "commits",
-    hint: recent7 > 0 ? `最近 7 天 +${recent7}` : "稳定运行中",
+    cmd: "find ./posts -newermt '7 days ago'",
+    value: String(blogStats.recentPosts),
+    unit: "recent",
+    hint: "最近 7 天发布",
   },
   {
     cmd: "uptime",
     value: uptimeStr,
     unit: "uptime",
-    hint: `自 ${sinceStr}`,
+    hint: `自 ${blogStats.since}`,
   },
 ];
 
 const timeline = sortedPosts.slice(0, 10);
-const updatedToday = today.format("YYYY-MM-DD HH:mm");
+const updatedToday = blogStats.generatedAt;
 ---
 
 <Layout>
@@ -198,7 +146,7 @@ const updatedToday = today.format("YYYY-MM-DD HH:mm");
       >
         <span class="term-prompt">han@ikun126</span><span
           style="color: var(--muted);">:~$</span
-        > ./scripts/stats.sh
+        > node ./scripts/generate-stats.mjs
         <span class="term-comment">// auto-generated · {updatedToday}</span>
       </div>
       <div

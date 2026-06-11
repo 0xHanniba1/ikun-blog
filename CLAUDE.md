@@ -140,7 +140,7 @@ CF Pages 1-2 分钟内自动部署。
 ## 仓库小细节
 
 - `src/pages/index.astro` 首页 timeline 取最近 10 条，不要把所有都列出来
-- stats 卡片是 4 行：`posts / words / commits / uptime`，全部 build-time 算的，不用维护
+- stats 卡片是 4 行：`posts / words / recent / uptime`，由 `scripts/generate-stats.mjs` 在 dev/build 前自动生成，不用手工维护
 - ⌘K 浮层在 `src/components/SearchModal.astro`，搜索索引来自 `getCollection("blog")` 注入的 JSON
 - Tweaks 面板在 `src/components/TweaksPanel.astro`（字号 / accent 色 / 主题），写到 localStorage
 - 文章页 TOC 自动从 markdown 标题生成（见 `src/layouts/PostDetails.astro`），sidebar 在 ≥ 1024px 显示

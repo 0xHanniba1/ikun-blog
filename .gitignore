@@ -1,8 +1,9 @@
 # build output
 dist/
 
-# generated types
+# generated files
 .astro/
+src/generated/blog-stats.json
 
 # dependencies
 node_modules/
